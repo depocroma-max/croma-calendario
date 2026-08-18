@@ -261,7 +261,36 @@
   color: var(--text-muted, var(--gray-400));
 }
 .avz-cal-semanas { display: flex; flex-direction: column; }
-.avz-cal-semana { display: grid; grid-template-columns: repeat(7, 1fr); }
+.avz-cal-semana { display: grid; grid-template-columns: repeat(7, 1fr); position: relative; }
+
+/* Barras multi-día (ver itemsMultidiaSemana en avisos.js) — overlay
+   absoluto sobre la fila, con su propia grilla de 7 columnas calcada de
+   .avz-cal-semana, para poder usar grid-column: inicio/fin y que el
+   navegador arme el ancho exacto sin matemática de píxeles a mano. Al
+   ser position:absolute no participa del auto-placement del grid padre
+   (spec de CSS Grid) — los 7 <div class="avz-cal-celda"> siguen cayendo
+   en sus columnas de siempre aunque este div aparezca primero en el DOM. */
+.avz-cal-semana-barras {
+  position: absolute; left: 0; right: 0;
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  row-gap: 2px; padding: 0 1px; pointer-events: none;
+}
+.avz-cal-barra {
+  pointer-events: auto; cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+  padding: 1px 6px; margin: 0 1px;
+  border-radius: 8px;
+  background: var(--gray-400);
+  color: #fff; font-size: 10px; font-weight: 600; line-height: 1.5;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.avz-cal-barra:hover { filter: brightness(0.92); }
+.avz-cal-barra-cerrado { background: var(--croma-black); }
+.avz-cal-barra-vacacion { background: var(--success, #16a34a); }
+.avz-cal-barra-continua-izq { margin-left: 0; border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.avz-cal-barra-continua-der { margin-right: 0; border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.avz-cal-barra-titulo { overflow: hidden; text-overflow: ellipsis; }
+.avz-cal-barra svg { flex-shrink: 0; width: 10px; height: 10px; }
 .avz-cal-celda {
   min-height: 92px;
   padding: 6px 8px;

@@ -490,6 +490,57 @@
     });
   }
 
+  const BARRA_ALTO_PX = 18; // alto de cada línea de barra en la vista Calendario
+  const BARRA_OFFSET_PX = 34; // deja lugar al número del día + label de feriado antes de la primera línea
+
+  // Avisos/vacaciones que cruzan más de un día, dentro de la semana
+  // [weekStartIso, weekEndIso] — se muestran como una barra continua en
+  // vez de repetirse en cada celda (pedido explícito: "que arrastre como
+  // lo hace con las vacaciones", aunque en rigor las vacaciones tampoco
+  // lo hacían todavía — se resuelve para las dos a la vez, ver charla).
+  // Asignación de "lane" (línea vertical dentro de la semana) con el
+  // algoritmo greedy estándar de calendarios: ordenar por inicio y
+  // duración, ubicar en el primer lane libre. Local cerrado va primero
+  // en el orden a propósito — mismo criterio de prioridad visual que ya
+  // tenía la lista por día, para que nunca quede tapado por otra barra.
+  function itemsMultidiaSemana(weekStartIso, weekEndIso) {
+    const avisos = avisosFiltrados().filter(function (a) {
+      return !a.archivado && a.fechaDesde !== a.fechaHasta && a.fechaDesde <= weekEndIso && a.fechaHasta >= weekStartIso;
+    });
+    const vacaciones = state.vacaciones.filter(function (v) {
+      if (state.sucursal !== 'todas' && v.sucursalId !== state.sucursal) return false;
+      return v.fechaDesde !== v.fechaHasta && v.fechaDesde <= weekEndIso && v.fechaHasta >= weekStartIso;
+    });
+
+    const items = avisos.map(function (a) { return { esVacacion: false, aviso: a, desde: a.fechaDesde, hasta: a.fechaHasta }; })
+      .concat(vacaciones.map(function (v) { return { esVacacion: true, vacacion: v, desde: v.fechaDesde, hasta: v.fechaHasta }; }));
+
+    items.forEach(function (it) {
+      it.colStart = Math.max(0, diffDias(weekStartIso, it.desde));
+      it.colEnd = Math.min(6, diffDias(weekStartIso, it.hasta));
+      it.continuaIzq = it.desde < weekStartIso;
+      it.continuaDer = it.hasta > weekEndIso;
+    });
+
+    items.sort(function (a, b) {
+      const pa = (!a.esVacacion && a.aviso.tipo === 'local_cerrado') ? 0 : 1;
+      const pb = (!b.esVacacion && b.aviso.tipo === 'local_cerrado') ? 0 : 1;
+      if (pa !== pb) return pa - pb;
+      if (a.colStart !== b.colStart) return a.colStart - b.colStart;
+      return (b.colEnd - b.colStart) - (a.colEnd - a.colStart);
+    });
+
+    const lanesFin = []; // lanesFin[i] = última columna ocupada en ese lane
+    items.forEach(function (it) {
+      let lane = lanesFin.findIndex(function (fin) { return fin < it.colStart; });
+      if (lane === -1) { lane = lanesFin.length; lanesFin.push(it.colEnd); }
+      else { lanesFin[lane] = it.colEnd; }
+      it.lane = lane;
+    });
+
+    return { items: items, maxLanes: lanesFin.length };
+  }
+
   function colorSucursalDeAviso(aviso) {
     if (aviso.destinatarios.modo === 'sucursal' && aviso.destinatarios.ids.length === 1) {
       const s = sucursalPorId(aviso.destinatarios.ids[0]);
@@ -890,7 +941,34 @@
 
     let html = '';
     for (let s = 0; s < celdas.length; s += 7) {
-      html += '<div class="avz-cal-semana">';
+      const weekStartIso = celdas[s].iso;
+      const weekEndIso = celdas[s + 6].iso;
+      const multidia = itemsMultidiaSemana(weekStartIso, weekEndIso);
+      const idsAvisoMultidia = new Set(multidia.items.filter(function (it) { return !it.esVacacion; }).map(function (it) { return it.aviso.id; }));
+      const idsVacacionMultidia = new Set(multidia.items.filter(function (it) { return it.esVacacion; }).map(function (it) { return it.vacacion.id; }));
+
+      const barrasHtml = multidia.items.map(function (it) {
+        const claseContinua = (it.continuaIzq ? ' avz-cal-barra-continua-izq' : '') + (it.continuaDer ? ' avz-cal-barra-continua-der' : '');
+        const style = 'grid-column:' + (it.colStart + 1) + '/' + (it.colEnd + 2) + ';grid-row:' + (it.lane + 1) + ';';
+        if (it.esVacacion) {
+          const v = it.vacacion;
+          return '<div class="avz-cal-barra avz-cal-barra-vacacion' + claseContinua + '" style="' + style + '" data-vacacion-id="' + v.id + '" tabindex="0" role="button" title="' + escapeAttr(v.empleado + ' — ' + fmtRango(v.fechaDesde, v.fechaHasta)) + '">' +
+            icon('palmtree', 'icon-10') + '<span class="avz-cal-barra-titulo">' + escapeHtml(v.empleado) + '</span>' +
+          '</div>';
+        }
+        const a = it.aviso;
+        const hex = hexDeColor(a.color);
+        const styleColor = a.tipo === 'local_cerrado' ? '' : (hex ? 'background:' + hex + ';' : '');
+        return '<div class="avz-cal-barra' + (a.tipo === 'local_cerrado' ? ' avz-cal-barra-cerrado' : '') + claseContinua + '" style="' + style + styleColor + '" data-abrir-aviso="' + a.id + '" tabindex="0" role="button" title="' + escapeAttr(a.titulo) + '">' +
+          (a.prioridad === 'urgente' ? '<span class="avz-urgente-dot"></span>' : '') +
+          '<span class="avz-cal-barra-titulo">' + escapeHtml(a.titulo) + '</span>' +
+        '</div>';
+      }).join('');
+      const barrasContainer = multidia.items.length
+        ? '<div class="avz-cal-semana-barras" style="top:' + BARRA_OFFSET_PX + 'px;grid-auto-rows:' + BARRA_ALTO_PX + 'px">' + barrasHtml + '</div>'
+        : '';
+
+      html += '<div class="avz-cal-semana">' + barrasContainer;
       for (let i = s; i < s + 7; i++) {
         const c = celdas[i];
         const esHoy = !c.fuera && c.iso === hoy;
@@ -898,8 +976,10 @@
         // siempre la última columna de la fila, índice 6 dentro de "s".
         const esDomingo = !c.fuera && (i - s) === 6;
         const feriado = !c.fuera && window.CromaFeriados ? window.CromaFeriados.obtener(c.iso) : null;
-        const avisosDia = avisosDelDia(c.iso);
-        const vacacionesDia = vacacionesDelDia(c.iso);
+        // Multi-día (fechaDesde !== fechaHasta) ya se muestra como barra
+        // arriba — acá solo queda lo de un solo día, para no duplicar.
+        const avisosDia = avisosDelDia(c.iso).filter(function (a) { return !idsAvisoMultidia.has(a.id); });
+        const vacacionesDia = vacacionesDelDia(c.iso).filter(function (v) { return !idsVacacionMultidia.has(v.id); });
 
         // Prioridad visual (Fase 4, aprobada): Local Cerrado primero —
         // nunca debe quedar oculto detrás de Vacaciones por overflow —
@@ -940,10 +1020,16 @@
           ? '<div class="avz-cal-feriado avz-cal-feriado-' + feriado.tipo + '" title="' + escapeAttr(feriado.nombre) + '">' + escapeHtml(feriado.corto) + '</div>'
           : '';
 
+        // El número del día y el label de feriado quedan en flujo normal,
+        // sin tocar — lo único que se empuja es la lista de avisos, lo
+        // justo para no quedar tapada por las barras (position:absolute,
+        // ver .avz-cal-semana-barras) que flotan encima de la celda.
+        const margenAvisos = multidia.maxLanes > 0 ? (10 + multidia.maxLanes * (BARRA_ALTO_PX + 2)) : 0;
+
         html += '<div class="avz-cal-celda' + (c.fuera ? ' fuera-de-mes' : '') + (esHoy ? ' es-hoy' : '') + (esDomingo ? ' es-domingo' : '') + (feriado ? ' es-feriado avz-cal-celda-' + feriado.tipo : '') + '" data-celda-fecha="' + c.iso + '">' +
           '<div class="avz-cal-num">' + c.num + '</div>' +
           feriadoHtml +
-          '<div class="avz-cal-avisos">' + itemsHtml + masHtml + '</div>' +
+          '<div class="avz-cal-avisos"' + (margenAvisos ? ' style="margin-top:' + margenAvisos + 'px"' : '') + '>' + itemsHtml + masHtml + '</div>' +
           '<button class="avz-cal-celda-nuevo" type="button" data-nuevo-dia="' + c.iso + '" title="Nuevo aviso este día" aria-label="Nuevo aviso este día">' + icon('plus', 'icon-12') + '</button>' +
         '</div>';
       }
@@ -976,6 +1062,12 @@
       if (vacItem) { abrirPanel('detalle-vacacion', { vacacionId: vacItem.dataset.vacacionId, elementoOrigen: vacItem }); return; }
       const item = e.target.closest('.avz-cal-aviso-item');
       if (item) { abrirPanel('detalle', { avisoId: item.dataset.abrirAviso, elementoOrigen: item }); return; }
+      // Barras multi-día (fuera de cualquier .avz-cal-celda en el DOM,
+      // conviven como overlay aparte — ver .avz-cal-semana-barras).
+      const barraVac = e.target.closest('.avz-cal-barra[data-vacacion-id]');
+      if (barraVac) { abrirPanel('detalle-vacacion', { vacacionId: barraVac.dataset.vacacionId, elementoOrigen: barraVac }); return; }
+      const barraAviso = e.target.closest('.avz-cal-barra[data-abrir-aviso]');
+      if (barraAviso) { abrirPanel('detalle', { avisoId: barraAviso.dataset.abrirAviso, elementoOrigen: barraAviso }); return; }
       const masBtn = e.target.closest('.avz-cal-mas');
       if (masBtn) { abrirPanel('resumen-dia', { fecha: masBtn.dataset.resumenDia, elementoOrigen: masBtn }); return; }
       // Botón "+" propio de la celda: atajo directo a "nuevo aviso" para
