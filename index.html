@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Croma · Calendario</title>
+  <link rel="icon" type="image/png" href="tridente_solo.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0d0d0d" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Croma" />
+  <link rel="apple-touch-icon" href="tridente_solo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="croma-ds.css?v=20260818-1" />
+  <link rel="stylesheet" href="avisos.css?v=20260818-1" />
+  <style>
+    body { margin: 0; background: var(--bg); font-family: var(--font-body); color: var(--croma-black); }
+
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0 1.5rem; height: 56px;
+      background: var(--black); border-bottom: 1px solid #222;
+    }
+    .brand { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+    .brand-tridente { height: 26px; width: auto; object-fit: contain; margin-right: 2px; filter: drop-shadow(0 0 4px rgba(232,37,26,0.4)); }
+    .brand-logo { font-family: var(--font-display); font-size: 24px; letter-spacing: 3px; line-height: 1; color: var(--white); }
+    .brand-divider { color: var(--gray-600); font-size: 14px; }
+    .brand-section { font-size: 11px; font-weight: 500; letter-spacing: 3px; color: var(--gray-400); text-transform: uppercase; }
+
+    .top-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+    .user-chip { display: flex; align-items: center; gap: 8px; }
+    .user-nombre { font-size: 13px; font-weight: 600; color: var(--white); }
+    .user-rol { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--gray-400); }
+    .btn-icon-dark {
+      width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); color: var(--gray-400);
+      cursor: pointer; transition: background .15s, color .15s;
+    }
+    .btn-icon-dark:hover { background: rgba(255,255,255,.12); color: var(--white); }
+
+    #splashScreen {
+      position: fixed; inset: 0; z-index: 999; background: var(--black);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    }
+    #splashScreen img { height: 56px; width: auto; filter: drop-shadow(0 0 10px rgba(232,37,26,.4)); }
+    #splashScreen span { font-family: var(--font-display); font-size: 20px; letter-spacing: 4px; color: var(--white); }
+  </style>
+</head>
+<body>
+
+  <!-- SPLASH SCREEN -->
+  <div id="splashScreen">
+    <img src="tridente_solo.png" alt="Croma" />
+    <span>CROMA</span>
+  </div>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <a class="brand" href="https://croma-app.com.ar/">
+      <img src="tridente_solo.png" class="brand-tridente" alt="Croma" />
+      <span class="brand-logo">CROMA</span>
+      <span class="brand-divider">|</span>
+      <span class="brand-section">CALENDARIO</span>
+    </a>
+
+    <!-- Hooks que espera avisos.js (integración pensada para el shell de
+         horarios, con nav de varias vistas). Acá no hay otras vistas que
+         alternar, así que quedan ocultos y activar() se dispara directo. -->
+    <nav id="topNav" style="display:none">
+      <button class="avz-nav-btn" id="avzNavBtn"></button>
+      <button id="navBtnAdmin" style="display:none"></button>
+    </nav>
+
+    <div class="top-actions">
+      <div class="user-chip">
+        <span class="user-nombre" id="userNombre"></span>
+        <span class="user-rol" id="userRol"></span>
+      </div>
+      <button class="btn-icon-dark" id="btnLogout" title="Cerrar sesión" aria-label="Cerrar sesión">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENIDO — clase .view/.active porque activar() en avisos.js
+       manipula esas clases al montar la vista (mismo contrato que en
+       croma-horarios-main, para no tener que tocar avisos.js). -->
+  <main>
+    <div class="view" id="viewAvisos">
+      <div id="avisosContainer"></div>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="croma-icons.js?v=20260818-1"></script>
+  <script src="croma-session.js?v=20260818-1"></script>
+  <script src="avisos-mock-data.js?v=20260818-1"></script>
+  <script src="avisos-repository.js?v=20260818-1"></script>
+  <script src="avisos.js?v=20260818-1"></script>
+  <script src="avisos-provider.js?v=20260818-1"></script>
+  <script src="avisos-provider-avisos-strategy.js?v=20260818-1"></script>
+
+  <script>
+    // Cualquier rol autenticado por el hub puede entrar a leer Avisos —
+    // GET /api/avisos/mios ya filtra del lado del backend qué le
+    // corresponde ver a cada uno. Crear/editar queda reservado a
+    // admin/jefe por la API (ver docs/AVISOS_API.md en croma-horarios-main);
+    // acá solo espejamos esa regla para mostrar u ocultar el botón de
+    // "nuevo aviso" que ya trae avisos.js.
+    var _sesion = window.CromaSesion ? window.CromaSesion.requerirSesion() : null;
+    if (_sesion) {
+      document.getElementById('userNombre').textContent = _sesion.nombre || _sesion.usuario || '';
+      document.getElementById('userRol').textContent = _sesion.rol || '';
+
+      var _navBtnAdmin = document.getElementById('navBtnAdmin');
+      var _puedeGestionar = _sesion.rol === 'admin' || _sesion.rol === 'jefe';
+      _navBtnAdmin.style.display = _puedeGestionar ? '' : 'none';
+
+      document.getElementById('btnLogout').addEventListener('click', function () {
+        window.CromaSesion.cerrarSesion();
+      });
+
+      var _montarAvisos = function () {
+        if (window.CromaAvisos && typeof window.CromaAvisos.activar === 'function') {
+          window.CromaAvisos.activar();
+        }
+        var _splash = document.getElementById('splashScreen');
+        if (_splash) _splash.remove();
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _montarAvisos);
+      } else {
+        _montarAvisos();
+      }
+    }
+    // _sesion === null: requerirSesion() ya disparó location.href al hub,
+    // no hace falta hacer nada más acá (la navegación corta el resto).
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+  </script>
+</body>
+</html>

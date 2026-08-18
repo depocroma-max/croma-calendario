@@ -1,0 +1,424 @@
+/* ============================================================
+   CROMA · DESIGN SYSTEM (base) — Fase 2
+   Fuente única de tokens + componentes reutilizables.
+   Cargar SIEMPRE antes que style.css o cualquier <style> inline,
+   así las pantallas actuales pueden pisar sin regresiones.
+   No usa CDN ni dependencias externas (PWA/offline-friendly).
+   ============================================================ */
+
+:root {
+  /* ── Marca ── */
+  --croma-black: #0d0d0d;
+  --croma-red:   #e8251a;
+  --croma-white: #ffffff;
+
+  /* Alias legacy (compatibilidad con el CSS existente) */
+  --black:  #0d0d0d;
+  --white:  #ffffff;
+  --accent: #e8251a;
+
+  /* ── Fondo y grises ── */
+  --bg:       #f7f7f5;
+  --gray-50:  #f7f7f5;
+  --gray-100: #efefec;
+  --gray-200: #ddddd8;
+  --gray-300: #cfcfc8;
+  --gray-400: #a0a09a;
+  --gray-500: #8a8a84;
+  --gray-600: #666660;
+  --gray-800: #333330;
+
+  /* ── Estados ── */
+  --success:    #16a34a;  --success-bg: #dcfce7;
+  --warning:    #d97706;  --warning-bg: #fef3c7;
+  --danger:     #dc2626;  --danger-bg:  #fee2e2;  --danger-dark: #b91c1c;
+  --info:       #2563eb;  --info-bg:    #dbeafe;
+  --green:      #16a34a;  /* alias legacy usado por fichar/kiosco */
+
+  /* ── Texto ── */
+  --text-muted:     #94a3b8;  /* muted claro (placeholders, hints) */
+  --text-secondary: #64748b;  /* secundario (subtítulos, meta) */
+
+  /* ── Colores por sucursal ── */
+  --suc-01: #2563EB;  --suc-01-light: #EFF6FF;
+  --suc-05: #10B981;  --suc-05-light: #ECFDF5;
+  --suc-09: #F97316;  --suc-09-light: #FFF7ED;
+  --suc-10: #DB2777;  --suc-10-light: #FDF2F8;
+  --suc-12: #7C3AED;  --suc-12-light: #F5F3FF;
+  --suc-14: #92400E;  --suc-14-light: #FEF3C7;
+  --suc-depo:    #4B5563;  --suc-depo-light:    #F3F4F6;
+  --suc-oficina: #0891B2;  --suc-oficina-light: #ECFEFF;
+
+  /* ── Tipografías ── */
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+
+  /* ── Radios ── */
+  --radius-sm:   6px;
+  --radius-md:   10px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-pill: 999px;
+
+  /* ── Sombras ── */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg: 0 12px 32px rgba(0,0,0,0.16);
+
+  /* ── Espaciados ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* ── Transiciones ── */
+  --transition-fast: .12s ease;
+  --transition-base: .2s ease;
+
+  /* ── Superficie/borde neutro para paneles administrativos ──
+     Formaliza como token el gris frío (#e2e8f0 / #f8fafc) que
+     Administración ya usa hace tiempo (admin-tabla, admin-search,
+     btn-admin-edit) — distinto de la escala --gray-* (cálida, de
+     marca). No reemplaza --gray-*, es un token aparte para no
+     desprender esas pantallas del look que ya tienen. */
+  --border-neutral:  #e2e8f0;
+  --surface-sunken:  #f8fafc;
+}
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 0 18px;
+  border: none; border-radius: var(--radius-md);
+  font-family: var(--font-body); font-size: 15px; font-weight: 600; letter-spacing: .2px;
+  line-height: 1; text-decoration: none; white-space: nowrap;
+  cursor: pointer; user-select: none;
+  transition: background var(--transition-fast), border-color var(--transition-fast),
+              transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.btn:active   { transform: scale(.98); }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(232,37,26,.35); }
+
+.btn-primary   { background: var(--croma-red); color: #fff; box-shadow: 0 4px 14px rgba(232,37,26,.28); }
+.btn-primary:hover:not(:disabled)   { background: #d01f15; }
+
+.btn-secondary { background: var(--croma-black); color: #fff; }
+.btn-secondary:hover:not(:disabled) { background: #222; }
+
+.btn-danger    { background: var(--danger); color: #fff; }
+.btn-danger:hover:not(:disabled)    { background: #b91c1c; }
+
+.btn-success   { background: var(--success); color: #fff; }
+.btn-success:hover:not(:disabled)   { background: #15803d; }
+
+.btn-outline   { background: transparent; color: var(--croma-black); border: 1.5px solid var(--gray-200); }
+.btn-outline:hover:not(:disabled)   { border-color: var(--croma-black); }
+
+.btn-ghost     { background: transparent; color: var(--gray-600); }
+.btn-ghost:hover:not(:disabled)     { background: var(--gray-100); color: var(--croma-black); }
+
+.btn-icon {
+  min-height: 0; width: 40px; height: 40px; padding: 0;
+  border-radius: var(--radius-md); flex-shrink: 0;
+}
+.btn-block { width: 100%; }
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-5);
+}
+.card-hover {
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  cursor: pointer;
+}
+.card-hover:hover   { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.card-hover:active  { transform: scale(.99); }
+
+.action-card {
+  display: flex; flex-direction: column; align-items: flex-start;
+  background: var(--white); border: none; border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm); padding: var(--space-6);
+  cursor: pointer; text-decoration: none; color: inherit;
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+.action-card:hover  { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+
+.employee-card {
+  background: var(--white); border: 1px solid var(--gray-100);
+  border-radius: var(--radius-xl); overflow: hidden; cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+.employee-card:hover  { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+.employee-card:active { transform: scale(.98); }
+.employee-card .employee-photo {
+  width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block;
+  background: var(--gray-100);
+}
+
+.location-card {
+  display: flex; align-items: center; gap: var(--space-3);
+  background: var(--white); border: none;
+  border-radius: 16px; padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-sm); cursor: pointer; text-align: left;
+  transition: box-shadow var(--transition-base), transform var(--transition-fast);
+}
+.location-card:hover  { box-shadow: var(--shadow-md); }
+.location-card:active { transform: scale(.99); }
+
+/* ============================================================
+   FORMULARIOS
+   ============================================================ */
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--space-4); }
+.form-label { font-size: 13px; font-weight: 500; color: var(--gray-600); }
+.form-hint  { font-size: 12px; color: var(--gray-400); }
+.form-error { font-size: 12px; color: var(--danger); }
+
+.form-control, .form-select, .form-textarea {
+  width: 100%; min-height: 46px; padding: 0 14px;
+  border: 1.5px solid var(--gray-200); border-radius: var(--radius-md);
+  font-family: var(--font-body); font-size: 15px; color: var(--croma-black);
+  background: var(--white); outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.form-textarea { min-height: 84px; padding: 12px 14px; resize: vertical; line-height: 1.5; }
+.form-control::placeholder, .form-textarea::placeholder { color: var(--gray-300); }
+.form-control:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--croma-red); box-shadow: 0 0 0 3px rgba(232,37,26,.12);
+}
+.form-select {
+  appearance: none; -webkit-appearance: none; padding-right: 38px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23e8251a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+}
+
+/* Switch (toggle) */
+.form-switch { position: relative; width: 46px; height: 26px; flex-shrink: 0; display: inline-block; }
+.form-switch input { opacity: 0; width: 0; height: 0; }
+.form-switch .switch-track {
+  position: absolute; inset: 0; background: var(--gray-200);
+  border-radius: var(--radius-pill); cursor: pointer; transition: background var(--transition-base);
+}
+.form-switch .switch-track::before {
+  content: ''; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px;
+  background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.25);
+  transition: transform var(--transition-base);
+}
+.form-switch input:checked + .switch-track { background: var(--croma-black); }
+.form-switch input:checked + .switch-track::before { transform: translateX(20px); }
+.form-switch input:focus-visible + .switch-track { box-shadow: 0 0 0 3px rgba(232,37,26,.30); }
+
+/* ============================================================
+   BADGES
+   ============================================================ */
+.badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 600; line-height: 1;
+  padding: 4px 10px; border-radius: var(--radius-pill); white-space: nowrap;
+}
+.badge svg { width: 12px; height: 12px; }
+.badge-success { background: var(--success-bg); color: var(--success); }
+.badge-warning { background: var(--warning-bg); color: var(--warning); }
+.badge-danger  { background: var(--danger-bg);  color: var(--danger); }
+.badge-info    { background: var(--info-bg);     color: var(--info); }
+.badge-neutral { background: var(--gray-100);    color: var(--gray-600); }
+
+/* Modificador: punto de estado dentro del badge (además del texto/color,
+   nunca en su lugar — ver DEVELOPMENT_GUIDE, el estado siempre se codifica
+   dos veces). Uso: <span class="badge badge-success"><span class="badge-dot"></span>Con acceso</span> */
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; background: currentColor; }
+
+/* ============================================================
+   ALERTS
+   ============================================================ */
+.alert {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 14px; border-radius: var(--radius-md);
+  font-size: 14px; line-height: 1.45; border-left: 3px solid transparent;
+}
+.alert svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+.alert-success { background: var(--success-bg); color: #14532d; border-left-color: var(--success); }
+.alert-warning { background: var(--warning-bg); color: #78350f; border-left-color: var(--warning); }
+.alert-danger  { background: var(--danger-bg);  color: #7f1d1d; border-left-color: var(--danger); }
+.alert-info    { background: var(--info-bg);     color: #1e3a8a; border-left-color: var(--info); }
+
+/* ============================================================
+   ICONOS (helper icon() en croma-icons.js)
+   Los SVG heredan color con currentColor; el tamaño se define
+   por contexto. Utilidad opcional de tamaño por defecto:
+   ============================================================ */
+.icon-16 { width: 16px; height: 16px; }
+.icon-20 { width: 20px; height: 20px; }
+.icon-24 { width: 24px; height: 24px; }
+
+/* ============================================================
+   UTILIDADES DE TEXTO
+   ============================================================ */
+.text-muted     { color: var(--text-muted); }
+.text-secondary { color: var(--text-secondary); }
+
+/* ============================================================
+   IDENTIDAD DE SUCURSALES
+   Uso: set --sucursal-color y --sucursal-light en el elemento
+   o en un ancestro, y aplicá las clases de abajo.
+   ============================================================ */
+
+/* Borde superior de color (accent top rail) */
+.sucursal-accent-card { position: relative; overflow: hidden; }
+.sucursal-accent-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 4px; background: var(--sucursal-color, var(--gray-200));
+}
+
+/* Barra lateral de color */
+.sucursal-rail {
+  width: 4px; border-radius: 999px; align-self: stretch; flex-shrink: 0;
+  background: var(--sucursal-color, var(--gray-200));
+}
+
+/* Cápsula de icono */
+.sucursal-icon {
+  width: 42px; height: 42px; border-radius: 14px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--sucursal-color, var(--gray-600));
+  background: var(--sucursal-light, var(--gray-100));
+}
+.sucursal-icon svg { width: 21px; height: 21px; }
+
+/* ============================================================
+   RAIL NAV — submenú lateral de una sección (no navegación
+   global de la app). Deliberadamente más chico/liviano que el
+   drawer principal: rótulo propio arriba, estado activo con
+   borde lateral + fondo sutil (no relleno sólido).
+   Uso: <nav class="rail-nav"><div class="rail-label">Sección</div>
+        <button class="rail-item active">{icon}<span>Item</span>
+        <span class="rail-count">N</span></button>…</nav>
+   ============================================================ */
+.rail-nav { padding: 18px 10px; }
+.rail-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase;
+  color: var(--text-muted); padding: 0 10px; margin-bottom: 8px;
+}
+.rail-item {
+  display: flex; align-items: center; gap: 9px; width: 100%; padding: 7px 10px;
+  margin-bottom: 1px; border: none; border-left: 2px solid transparent; border-radius: var(--radius-sm);
+  background: transparent; color: var(--text-secondary);
+  font-family: var(--font-body); font-size: 13px; font-weight: 500; text-align: left; cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.rail-item svg { color: var(--text-muted); width: 15px; height: 15px; flex-shrink: 0; }
+.rail-item:hover { background: var(--gray-100); color: var(--croma-black); }
+.rail-item.active {
+  background: var(--white); color: var(--croma-black); font-weight: 600;
+  border-left-color: var(--croma-black); box-shadow: var(--shadow-sm);
+}
+.rail-item.active svg { color: var(--croma-black); }
+.rail-count { margin-left: auto; font-size: 10.5px; font-weight: 600; color: var(--text-muted); }
+.rail-item.active .rail-count { color: var(--text-secondary); }
+
+/* ============================================================
+   STAT STRIP — resumen discreto en línea, para acompañar un
+   título sin competir con el contenido principal (a diferencia
+   de una tarjeta KPI con borde/ícono/sombra). Números en
+   font-display, igual que .admin-titulo.
+   Uso: <div class="stat-strip"><div class="stat-item">
+        <span class="stat-num">31</span><span class="stat-label">empleados</span>
+        </div><span class="stat-sep"></span>…</div>
+   ============================================================ */
+.stat-strip { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.stat-item { display: flex; align-items: baseline; gap: 5px; }
+.stat-num { font-family: var(--font-display); font-size: 17px; letter-spacing: .3px; color: var(--croma-black); font-variant-numeric: tabular-nums; }
+.stat-label { font-size: 11.5px; color: var(--text-muted); }
+.stat-sep { width: 1px; height: 12px; background: var(--border-neutral); }
+
+/* ============================================================
+   DT-TABLE — "tabla premium": sigue siendo <table>, no cards.
+   Más aire que .admin-tabla, celda de identidad con avatar
+   protagonista, hover con barra de acento + acciones que
+   aparecen recién al pasar el mouse (para no competir en reposo
+   con el escaneo rápido de muchas filas).
+   ============================================================ */
+.dt-wrap { border: 1px solid var(--border-neutral); border-radius: var(--radius-lg); overflow: hidden; background: var(--white); }
+.dt-scroll { overflow-x: auto; }
+.dt-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dt-table thead th {
+  padding: 11px 18px; background: var(--surface-sunken);
+  font-size: 10.5px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase;
+  color: var(--text-muted); border-bottom: 1px solid var(--border-neutral); text-align: left; white-space: nowrap;
+}
+.dt-table th.al-c, .dt-table td.al-c { text-align: center; }
+.dt-table tbody tr {
+  border-bottom: 1px solid var(--gray-100);
+  box-shadow: inset 2.5px 0 0 transparent;
+  transition: background var(--transition-fast), box-shadow var(--transition-base);
+}
+.dt-table tbody tr:last-child { border-bottom: none; }
+.dt-table tbody tr.dt-clickable { cursor: pointer; }
+.dt-table tbody tr:hover { background: var(--surface-sunken); box-shadow: inset 2.5px 0 0 var(--croma-black); }
+.dt-table tbody tr.dt-inactive { opacity: .55; }
+.dt-table td { padding: 13px 18px; vertical-align: top; color: var(--croma-black); line-height: 1.4; }
+.dt-table td:has(.dt-identity),
+.dt-table td.al-c { vertical-align: middle; }
+
+.dt-row-actions {
+  display: flex; gap: 2px; justify-content: flex-end;
+  opacity: 0; transform: translateX(4px); transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+.dt-table tbody tr:hover .dt-row-actions,
+.dt-row-actions:focus-within { opacity: 1; transform: none; }
+@media (hover: none) { .dt-row-actions { opacity: 1; transform: none; } }
+
+.dt-identity { display: flex; align-items: center; gap: 12px; }
+.dt-avatar-wrap { position: relative; flex-shrink: 0; }
+.dt-avatar, .dt-avatar-initials {
+  width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--gray-100); color: var(--text-secondary); font-size: 13px; font-weight: 700;
+  border: 1px solid var(--border-neutral); object-fit: cover;
+}
+.dt-avatar-dot { position: absolute; bottom: -1px; right: -1px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--white); }
+.dt-table tbody tr:hover .dt-avatar-dot { border-color: var(--surface-sunken); }
+/* Tono del punto de estado — mismo vocabulario que .badge-* (success/warning/danger/info/neutral) */
+.dot-success { background: var(--success); }
+.dot-warning { background: var(--warning); }
+.dot-danger  { background: var(--danger); }
+.dot-info    { background: var(--info); }
+.dot-neutral { background: var(--gray-400); }
+.dt-identity-text { min-width: 0; }
+.dt-identity-name { font-size: 13.5px; font-weight: 600; color: var(--croma-black); display: flex; align-items: baseline; gap: 6px; }
+.dt-identity-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+
+.dt-btn-icon {
+  width: 30px; height: 30px; border-radius: var(--radius-sm); border: none; background: transparent;
+  color: var(--text-muted); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+.dt-btn-icon svg { width: 15px; height: 15px; }
+.dt-btn-icon:hover { background: var(--gray-200); color: var(--croma-black); }
+.dt-btn-icon--danger:hover { background: var(--danger-bg); color: var(--danger); }
+
+/* Menú contextual chico (kebab / "más acciones") */
+.dt-menu {
+  z-index: 700; min-width: 180px; padding: 4px;
+  background: var(--white); border: 1px solid var(--border-neutral); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md); display: flex; flex-direction: column; gap: 1px;
+}
+.dt-menu-item {
+  display: block; width: 100%; text-align: left; padding: 8px 10px; border: none; background: transparent;
+  border-radius: var(--radius-sm); font-family: var(--font-body); font-size: 12.5px; font-weight: 500;
+  color: var(--croma-black); cursor: pointer; transition: background var(--transition-fast);
+}
+.dt-menu-item:hover { background: var(--gray-100); }
+.dt-menu-item--peligro { color: var(--danger); }
+.dt-menu-item--peligro:hover { background: var(--danger-bg); }
