@@ -298,8 +298,10 @@
    sin pelearse por especificidad CSS. */
 .avz-cal-celda.avz-cal-celda-nacional { background: var(--danger-bg, #fee2e2); }
 .avz-cal-celda.avz-cal-celda-turistico { background: var(--warning-bg, #fef3c7); }
+.avz-cal-celda.avz-cal-celda-sectorial { background: #ede9fe; }
 .avz-cal-celda.es-feriado .avz-cal-num { color: var(--danger, var(--croma-red)); font-weight: 700; }
 .avz-cal-celda.avz-cal-celda-turistico .avz-cal-num { color: var(--warning, #d97706); }
+.avz-cal-celda.avz-cal-celda-sectorial .avz-cal-num { color: #7c3aed; }
 .avz-cal-feriado {
   font-size: 10px;
   font-weight: 600;
@@ -311,6 +313,7 @@
   color: var(--danger, var(--croma-red));
 }
 .avz-cal-feriado-turistico { color: var(--warning, #d97706); }
+.avz-cal-feriado-sectorial { color: #7c3aed; }
 
 .avz-cal-legenda {
   display: flex;
@@ -326,6 +329,7 @@
 }
 .avz-cal-legenda-nacional::before { background: var(--danger, var(--croma-red)); }
 .avz-cal-legenda-turistico::before { background: var(--warning, #d97706); }
+.avz-cal-legenda-sectorial::before { background: #7c3aed; }
 
 /* ── Vista Lista ──────────────────────────────────────── */
 .avz-lista-toolbar {
@@ -597,6 +601,18 @@
 .avz-radio-row, .avz-check-row {
   display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--gray-800); cursor: pointer;
 }
+
+.avz-color-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+.avz-color-swatch {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent;
+  cursor: pointer; padding: 0; background: var(--gray-200);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+}
+.avz-color-swatch-estandar {
+  background: linear-gradient(135deg, transparent 45%, var(--gray-300) 45%, var(--gray-300) 55%, transparent 55%), var(--white);
+}
+.avz-color-swatch:hover { transform: scale(1.08); }
+.avz-color-swatch.active { border-color: var(--croma-black); box-shadow: 0 0 0 2px var(--white), 0 0 0 3px var(--croma-black); }
 
 .avz-mas-opciones-btn {
   background: none; border: none; padding: 6px 0; font-size: 12px; font-weight: 600;

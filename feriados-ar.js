@@ -33,6 +33,13 @@
     '2026-07-09': { nombre: 'Día de la Independencia', corto: 'Independencia', tipo: 'nacional' },
     '2026-07-10': { nombre: 'Día no laborable con fines turísticos', corto: 'Puente', tipo: 'turistico' },
     '2026-08-17': { nombre: 'Paso a la Inmortalidad del General José de San Martín', corto: 'San Martín', tipo: 'nacional' },
+    // No es feriado nacional — es el día no laborable del gremio de
+    // Empleados de Comercio (CCT, FAECYS), nuestro rubro. Fecha real
+    // 26/9, pero este año se traslada al 28/9 — a diferencia de los
+    // feriados nacionales, esto se negocia cada año por convenio, no por
+    // ley, así que la fecha (y si se traslada o no) puede cambiar y hay
+    // que confirmarla de nuevo cada vez que se actualice este archivo.
+    '2026-09-28': { nombre: 'Día del Empleado de Comercio', corto: 'Día del Comercio', tipo: 'sectorial' },
     '2026-10-12': { nombre: 'Día del Respeto a la Diversidad Cultural', corto: 'Diversidad Cultural', tipo: 'nacional' },
     '2026-11-23': { nombre: 'Día de la Soberanía Nacional', corto: 'Soberanía Nacional', tipo: 'nacional' },
     '2026-12-07': { nombre: 'Día no laborable con fines turísticos', corto: 'Puente', tipo: 'turistico' },

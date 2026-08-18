@@ -26,6 +26,33 @@
     local_cerrado: { label: 'Local cerrado', icono: '▓' },
   };
 
+  // Color elegido a mano al publicar — opcional, independiente de tipo y
+  // de sucursal. '' (Estándar) = sin override, se ve como siempre (el
+  // color del ícono según el tipo). Se guarda el id, nunca el hex, para
+  // poder retocar la paleta después sin migrar datos.
+  const PALETA_COLORES = [
+    { id: '',         label: 'Estándar', hex: null },
+    { id: 'rojo',     label: 'Rojo',     hex: '#e8251a' },
+    { id: 'naranja',  label: 'Naranja',  hex: '#f97316' },
+    { id: 'ambar',    label: 'Ámbar',    hex: '#d97706' },
+    { id: 'verde',    label: 'Verde',    hex: '#16a34a' },
+    { id: 'celeste',  label: 'Celeste',  hex: '#0891b2' },
+    { id: 'azul',     label: 'Azul',     hex: '#2563eb' },
+    { id: 'violeta',  label: 'Violeta',  hex: '#7c3aed' },
+    { id: 'rosa',     label: 'Rosa',     hex: '#db2777' },
+  ];
+  function hexDeColor(colorId) {
+    const c = PALETA_COLORES.find(function (p) { return p.id === colorId; });
+    return c ? c.hex : null;
+  }
+  // Ícono de tipo con el color elegido, si hay uno — helper único para no
+  // repetir el mismo if en las 5 vistas que muestran este ícono (Hoy,
+  // Lista, calendario, detalle, resumen del día).
+  function iconoAvisoHtml(aviso, clase) {
+    const hex = hexDeColor(aviso.color);
+    return '<span class="' + clase + '"' + (hex ? ' style="color:' + hex + '"' : '') + '>' + TIPO_META[aviso.tipo].icono + '</span>';
+  }
+
   // Defaults por tipo — documentados y aprobados en el plan técnico.
   // Información: solo Calendario por default — es la opción para dejar
   // algo marcado sin avisarle a nadie (sin banner/email/whatsapp). Quien
@@ -683,7 +710,7 @@
       html += '<div class="avz-proximos-label">Próximos 7 días</div>';
       en7dias.forEach(function (a) {
         html += '<div class="avz-proximo-fila" data-abrir-aviso="' + a.id + '" tabindex="0" role="button">' +
-          '<span class="avz-card-icono">' + TIPO_META[a.tipo].icono + '</span>' +
+          iconoAvisoHtml(a, 'avz-card-icono') +
           '<span class="avz-proximo-fecha">' + fmtCorta(a.fechaDesde) + '</span>' +
           '<span class="avz-proximo-titulo">' + escapeHtml(a.titulo) + '</span>' +
           '<span class="avz-proximo-dest">' + escapeHtml(labelDestinatarios(a.destinatarios)) + '</span>' +
@@ -745,7 +772,7 @@
     avisos.forEach(function (a) {
       const archivado = a.archivado;
       html += '<div class="avz-fila" data-abrir-aviso="' + a.id + '" tabindex="0" role="button">' +
-        '<span class="avz-fila-icono">' + TIPO_META[a.tipo].icono + '</span>' +
+        iconoAvisoHtml(a, 'avz-fila-icono') +
         '<div class="avz-fila-info">' +
           '<div class="avz-fila-titulo">' +
             (a.prioridad === 'urgente' ? '<span class="avz-urgente-dot"></span>' : '') +
@@ -837,6 +864,7 @@
         '<span>● Evento</span><span>▓ Local cerrado</span><span>ⓘ Información</span><span>🔴 Urgente</span>' +
         '<span class="avz-cal-legenda-feriado avz-cal-legenda-nacional">Feriado nacional</span>' +
         '<span class="avz-cal-legenda-feriado avz-cal-legenda-turistico">No laborable (puente)</span>' +
+        '<span class="avz-cal-legenda-feriado avz-cal-legenda-sectorial">Día del gremio</span>' +
       '</div>';
   }
 
@@ -900,7 +928,7 @@
           }
           const a = it.aviso;
           return '<div class="avz-cal-aviso-item" data-abrir-aviso="' + a.id + '" tabindex="0" role="button" title="' + escapeAttr(a.titulo) + '">' +
-            (a.prioridad === 'urgente' ? '<span class="avz-urgente-dot"></span>' : '<span class="avz-cal-aviso-icono">' + TIPO_META[a.tipo].icono + '</span>') +
+            (a.prioridad === 'urgente' ? '<span class="avz-urgente-dot"></span>' : iconoAvisoHtml(a, 'avz-cal-aviso-icono')) +
             '<span class="avz-cal-aviso-titulo">' + escapeHtml(a.titulo) + '</span>' +
           '</div>';
         }).join('');
@@ -990,6 +1018,7 @@
         destinatarios: clonarDestinatarios(original.destinatarios),
         canales: Object.assign({}, original.canales),
         prioridad: original.prioridad,
+        color: original.color || '',
       };
     }
     const tipo = opts.tipo || 'informacion';
@@ -1003,6 +1032,7 @@
       destinatarios: clonarDestinatarios(def.destinatarios),
       canales: Object.assign({}, def.canales),
       prioridad: def.prioridad,
+      color: '',
     };
   }
 
@@ -1171,7 +1201,7 @@
     const g = state.panel.guardando;
     return headerPanel(tituloPanelActual()) +
       '<div class="avz-panel-body">' +
-        '<div class="avz-detalle-tipo">' + TIPO_META[a.tipo].icono + ' ' + TIPO_META[a.tipo].label + '</div>' +
+        '<div class="avz-detalle-tipo">' + iconoAvisoHtml(a, '') + ' ' + TIPO_META[a.tipo].label + '</div>' +
         '<h3 class="avz-detalle-titulo">' + escapeHtml(a.titulo) + '</h3>' +
         '<div class="avz-detalle-meta">' +
           '<span class="badge badge-neutral" title="Versión ' + (a.version || 1) + '">' + labelEstado(st) + '</span>' +
@@ -1304,7 +1334,7 @@
     const vacaciones = vacacionesDelDia(fecha);
     const itemsAvisos = avisos.map(function (a) {
       return '<button class="avz-resumen-item" type="button" data-abrir-aviso="' + a.id + '">' +
-        '<span class="avz-fila-icono">' + TIPO_META[a.tipo].icono + '</span>' +
+        iconoAvisoHtml(a, 'avz-fila-icono') +
         '<span class="avz-resumen-item-titulo">' + escapeHtml(a.titulo) + (a.prioridad === 'urgente' ? ' <span class="avz-urgente-dot"></span>' : '') + '</span>' +
         '<span class="avz-fila-dest">' + escapeHtml(labelDestinatarios(a.destinatarios)) + '</span>' +
       '</button>';
@@ -1658,6 +1688,10 @@
               canalCheckbox('email', 'Email a sucursal', b) +
               canalCheckbox('whatsapp', 'WhatsApp', b) +
             '</div>' +
+            '<div class="avz-field">' +
+              '<span class="avz-field-label">Color</span>' +
+              '<div class="avz-color-swatches" role="radiogroup" aria-label="Color del aviso">' + colorSwatches(b) + '</div>' +
+            '</div>' +
           '</div>'
         ) : '') +
         '<div class="avz-preview-box"><strong>Vista previa:</strong> <span id="avzPreviewTexto">' + escapeHtml(textoVistaPrevia(b)) + '</span></div>' +
@@ -1673,6 +1707,15 @@
 
   function canalCheckbox(clave, label, b) {
     return '<label class="avz-check-row"><input type="checkbox" class="avz-form-canal" data-canal="' + clave + '"' + (b.canales[clave] ? ' checked' : '') + ' /> ' + label + '</label>';
+  }
+
+  function colorSwatches(b) {
+    return PALETA_COLORES.map(function (c) {
+      const activo = (b.color || '') === c.id;
+      const estilo = c.hex ? ' style="background:' + c.hex + '"' : '';
+      return '<button type="button" class="avz-color-swatch' + (c.id === '' ? ' avz-color-swatch-estandar' : '') + (activo ? ' active' : '') + '"' + estilo +
+        ' data-color="' + c.id + '" role="radio" aria-checked="' + activo + '" title="' + escapeAttr(c.label) + '" aria-label="' + escapeAttr(c.label) + '"></button>';
+    }).join('');
   }
 
   function wirePanelForm() {
@@ -1790,6 +1833,13 @@
         refrescarLigero();
       });
     });
+    panel.querySelectorAll('.avz-color-swatch').forEach(function (sw) {
+      sw.addEventListener('click', function () {
+        b.color = sw.dataset.color;
+        marcarDirty();
+        montarPanel();
+      });
+    });
 
     const btnCancelar = document.getElementById('avzFormCancelar');
     if (btnCancelar) btnCancelar.addEventListener('click', function () {
@@ -1809,6 +1859,7 @@
         destinatarios: clonarDestinatarios(b.destinatarios),
         canales: Object.assign({}, b.canales),
         prioridad: b.prioridad,
+        color: b.color || '',
       };
       state.panel.guardando = true;
       state.panel.errorGuardado = null;

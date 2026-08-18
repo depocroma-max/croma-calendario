@@ -141,6 +141,7 @@
       destinatarios: desdeApiDestinatarios(a.destinatarios),
       canales: Object.assign({}, a.canales),
       prioridad: a.prioridad || 'normal',
+      color: a.color || '',
       archivado: a.archivado === true,
       autor: a.autor || '',
       fechaCreacion: soloFecha(a.fecha_creacion),
@@ -158,6 +159,7 @@
     if (d.modo === 'sucursal') return { modo: 'sucursal', ids: (d.ids || []).slice() };
     if (d.modo === 'empleado') return { modo: 'empleado', nombres: (d.nombres || []).slice(), sucursal_id: d.sucursalId || '' };
     if (d.modo === 'administracion') return { modo: 'administracion' };
+    if (d.modo === 'personal') return { modo: 'personal' };
     return { modo: 'todos' };
   }
   function paraApi(b) {
@@ -170,6 +172,7 @@
       destinatarios: paraApiDestinatarios(b.destinatarios),
       canales: Object.assign({}, b.canales),
       prioridad: b.prioridad || 'normal',
+      color: b.color || '',
     };
   }
 
