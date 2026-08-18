@@ -27,12 +27,17 @@
   };
 
   // Defaults por tipo — documentados y aprobados en el plan técnico.
-  // Evento: Novedades queda OFF por default (el calendario ya lo
-  // comunica visualmente; el banner es un refuerzo opcional, no
-  // obligatorio, a diferencia de Información y Local cerrado).
+  // Información: solo Calendario por default — es la opción para dejar
+  // algo marcado sin avisarle a nadie (sin banner/email/whatsapp). Quien
+  // publica puede prender esos canales a mano desde "Más opciones" si
+  // igual quiere notificar.
+  // Evento: igual que Información, Novedades queda OFF por default (el
+  // calendario ya lo comunica visualmente; el banner es un refuerzo
+  // opcional, no obligatorio) — a diferencia de Local cerrado, que sí
+  // necesita avisar activamente.
   const DEFAULTS_POR_TIPO = {
     informacion: {
-      canales: { calendario: false, banner: true, email: false, whatsapp: false },
+      canales: { calendario: true, banner: false, email: false, whatsapp: false },
       prioridad: 'normal',
       destinatarios: { modo: 'todos' },
     },
@@ -55,7 +60,7 @@
 
   const state = {
     sucursal: 'todas',
-    vista: 'hoy',
+    vista: 'calendario',
     busqueda: '',
     calAnio: null,
     calMes: null, // 0-11
@@ -262,6 +267,7 @@
     if (d.modo === 'sucursal') return { modo: 'sucursal', ids: d.ids.slice() };
     if (d.modo === 'empleado') return { modo: 'empleado', nombres: d.nombres.slice(), sucursalId: d.sucursalId };
     if (d.modo === 'administracion') return { modo: 'administracion' };
+    if (d.modo === 'personal') return { modo: 'personal' };
     return { modo: 'todos' };
   }
   function clonarAviso(a) {
@@ -384,9 +390,14 @@
   // - "administracion" es visible SIEMPRE, independientemente de la tab
   //   (es una excepción explícita: no depende de ubicación, sino de rol)
   // - "empleado" se ubica en la tab de la sucursal de ese empleado
+  // - "personal" es visible SIEMPRE, misma razón que "administracion": no
+  //   depende de ubicación. El backend/GAS ya garantiza que este aviso
+  //   nunca llega acá salvo que el que está mirando sea el propio autor
+  //   (ver _resolverVisibleParaMisAvisos en Code-Jornada.js) — acá no hay
+  //   nada más que filtrar, ya es 100% suyo.
   function visibleEnTab(aviso, sucId) {
     const d = aviso.destinatarios;
-    if (d.modo === 'administracion') return true;
+    if (d.modo === 'administracion' || d.modo === 'personal') return true;
     if (sucId === 'todas') return true;
     if (d.modo === 'todos') return true;
     if (d.modo === 'sucursal') return d.ids.indexOf(sucId) !== -1;
@@ -396,6 +407,7 @@
 
   function labelDestinatarios(d) {
     if (d.modo === 'todos') return 'Todos';
+    if (d.modo === 'personal') return 'Personal';
     if (d.modo === 'administracion') return 'Administración';
     if (d.modo === 'empleado') return (d.nombres && d.nombres.length) ? d.nombres.join(', ') : 'Sin empleados';
     if (d.modo === 'sucursal') {
@@ -506,7 +518,7 @@
           '<h1 class="avz-titulo">AVISOS</h1>' +
           '<div class="avz-header-acciones">' +
             '<div class="avz-view-toggle">' +
-              btnVista('hoy', 'Hoy') + btnVista('calendario', 'Calendario') + btnVista('lista', 'Lista') +
+              btnVista('calendario', 'Calendario') + btnVista('hoy', 'Hoy') + btnVista('lista', 'Lista') +
               // Solicitudes pendientes (mudado desde el viejo menú Calendario
               // → tab "Solicitudes pendientes") — reusa cargarSolicitudesAdmin()
               // de app.js tal cual, solo cambia dónde vive el contenedor.
@@ -522,10 +534,6 @@
           '</div>' +
         '</div>' +
         '<div class="avz-suc-tabs" id="avzSucTabs" role="tablist" aria-label="Sucursal">' + sucOpts + '</div>' +
-        '<div class="avz-quick-actions">' +
-          '<button class="btn btn-outline" id="avzBtnCerrarLocal" type="button">🔒 Cerrar local</button>' +
-          '<button class="btn btn-outline avz-btn-beta" disabled title="Disponible en una próxima fase">⧉ Duplicar último</button>' +
-        '</div>' +
         '<div class="avz-body" id="avzBody"></div>' +
       '</div>';
 
@@ -547,9 +555,6 @@
     });
     document.getElementById('avzBtnNuevo').addEventListener('click', function () {
       abrirPanel('form', {});
-    });
-    document.getElementById('avzBtnCerrarLocal').addEventListener('click', function () {
-      abrirPanel('cerrar-local', {});
     });
 
     renderBody();
@@ -1551,6 +1556,7 @@
 
     const destRadios = [
       ['todos', 'Todos'], ['sucursal', 'Sucursal(es)'], ['empleado', 'Empleado(s)'], ['administracion', 'Administración'],
+      ['personal', 'Personal (solo yo)'],
     ].map(function (d) {
       const marcado = b.destinatarios.modo === d[0];
       return '<label class="avz-radio-row"><input type="radio" name="avzDest" value="' + d[0] + '"' + (marcado ? ' checked' : '') + ' /> ' + d[1] + '</label>';
@@ -1688,6 +1694,7 @@
         if (radio.value === 'sucursal') b.destinatarios = { modo: 'sucursal', ids: [] };
         else if (radio.value === 'empleado') b.destinatarios = { modo: 'empleado', nombres: [], sucursalId: '' };
         else if (radio.value === 'administracion') b.destinatarios = { modo: 'administracion' };
+        else if (radio.value === 'personal') b.destinatarios = { modo: 'personal' };
         else b.destinatarios = { modo: 'todos' };
         marcarDirty();
         montarPanel();
