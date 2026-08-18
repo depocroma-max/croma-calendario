@@ -866,7 +866,10 @@
       for (let i = s; i < s + 7; i++) {
         const c = celdas[i];
         const esHoy = !c.fuera && c.iso === hoy;
-        const feriado = window.CromaFeriados ? window.CromaFeriados.obtener(c.iso) : null;
+        // Semana arranca en lunes (offset ya calculado así) — domingo es
+        // siempre la última columna de la fila, índice 6 dentro de "s".
+        const esDomingo = !c.fuera && (i - s) === 6;
+        const feriado = !c.fuera && window.CromaFeriados ? window.CromaFeriados.obtener(c.iso) : null;
         const avisosDia = avisosDelDia(c.iso);
         const vacacionesDia = vacacionesDelDia(c.iso);
 
@@ -909,7 +912,7 @@
           ? '<div class="avz-cal-feriado avz-cal-feriado-' + feriado.tipo + '" title="' + escapeAttr(feriado.nombre) + '">' + escapeHtml(feriado.corto) + '</div>'
           : '';
 
-        html += '<div class="avz-cal-celda' + (c.fuera ? ' fuera-de-mes' : '') + (esHoy ? ' es-hoy' : '') + (feriado ? ' es-feriado avz-cal-celda-' + feriado.tipo : '') + '" data-celda-fecha="' + c.iso + '">' +
+        html += '<div class="avz-cal-celda' + (c.fuera ? ' fuera-de-mes' : '') + (esHoy ? ' es-hoy' : '') + (esDomingo ? ' es-domingo' : '') + (feriado ? ' es-feriado avz-cal-celda-' + feriado.tipo : '') + '" data-celda-fecha="' + c.iso + '">' +
           '<div class="avz-cal-num">' + c.num + '</div>' +
           feriadoHtml +
           '<div class="avz-cal-avisos">' + itemsHtml + masHtml + '</div>' +
@@ -1629,12 +1632,13 @@
           (err.destinatarios ? '<div class="avz-field-error">' + err.destinatarios + '</div>' : '') +
         '</div>' +
         (mostrarFecha ? (
-          '<div class="avz-field-row">' +
-            '<div class="avz-field"><label class="avz-field-label" for="avzFormDesde">Desde</label>' +
-              '<input type="date" class="form-control" id="avzFormDesde" value="' + escapeAttr(b.fechaDesde) + '" /></div>' +
-            '<div class="avz-field"><label class="avz-field-label" for="avzFormHasta">Hasta</label>' +
-              '<input type="date" class="form-control" id="avzFormHasta" value="' + escapeAttr(b.fechaHasta) + '" /></div>' +
-          '</div>' +
+          // Apiladas, no en fila: un <input type="date"> nativo necesita
+          // más ancho del que sobra repartiendo el panel (420px) en dos
+          // columnas — quedaban apretadas/pisadas incluso con min-width:0.
+          '<div class="avz-field"><label class="avz-field-label" for="avzFormDesde">Desde</label>' +
+            '<input type="date" class="form-control" id="avzFormDesde" value="' + escapeAttr(b.fechaDesde) + '" /></div>' +
+          '<div class="avz-field"><label class="avz-field-label" for="avzFormHasta">Hasta</label>' +
+            '<input type="date" class="form-control" id="avzFormHasta" value="' + escapeAttr(b.fechaHasta) + '" /></div>' +
           (err.fecha ? '<div class="avz-field-error">' + err.fecha + '</div>' : '')
         ) : '') +
         '<button class="avz-mas-opciones-btn" type="button" id="avzFormMasOpciones" aria-expanded="' + state.panel.masOpcionesAbiertas + '" aria-controls="avzFormMasOpcionesBody">' +
