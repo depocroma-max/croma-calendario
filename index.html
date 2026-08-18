@@ -15,8 +15,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="croma-ds.css?v=20260818-1" />
-  <link rel="stylesheet" href="croma-confirm.css?v=20260819-1" />
-  <link rel="stylesheet" href="avisos.css?v=20260819-5" />
+  <link rel="stylesheet" href="croma-confirm.css?v=20260819-2" />
+  <link rel="stylesheet" href="avisos.css?v=20260819-6" />
   <style>
     body { margin: 0; background: var(--bg); font-family: var(--font-body); color: var(--croma-black); }
 
@@ -32,16 +32,21 @@
     .brand-divider { color: var(--gray-600); font-size: 14px; }
     .brand-section { font-size: 11px; font-weight: 500; letter-spacing: 3px; color: var(--gray-400); text-transform: uppercase; }
 
-    .top-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-    .user-chip { display: flex; align-items: center; gap: 8px; }
-    .user-nombre { font-size: 13px; font-weight: 600; color: var(--white); }
-    .user-rol { font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: var(--gray-400); }
+    .top-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
     .btn-icon-dark {
       width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
       background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); color: var(--gray-400);
       cursor: pointer; transition: background .15s, color .15s;
     }
     .btn-icon-dark:hover { background: rgba(255,255,255,.12); color: var(--white); }
+
+    /* Mismo patrón que croma-panel-main/croma-horarios-main: chip único
+       con nombre + logout adentro, nunca nombre y rol repetidos. */
+    .sesion-chip { display: flex; align-items: center; gap: 8px; padding: 5px 10px 5px 12px; background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.18); border-radius: 20px; }
+    .sesion-nombre { font-size: 12px; font-weight: 600; color: #e8e8e2; white-space: nowrap; letter-spacing: 0.2px; display: flex; align-items: center; gap: 5px; }
+    .sesion-nombre svg { width: 13px; height: 13px; vertical-align: middle; flex-shrink: 0; }
+    .sesion-logout { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: #888; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+    .sesion-logout:hover { background: #dc2626; border-color: #dc2626; color: white; }
 
     #splashScreen {
       position: fixed; inset: 0; z-index: 999; background: var(--black);
@@ -80,13 +85,12 @@
       <button class="btn-icon-dark" id="btnSelector" title="Volver al selector" aria-label="Volver al selector" onclick="window.location.href='https://croma-app.com.ar/'">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
       </button>
-      <div class="user-chip">
-        <span class="user-nombre" id="userNombre"></span>
-        <span class="user-rol" id="userRol"></span>
+      <div class="sesion-chip">
+        <span class="sesion-nombre" id="userNombre"></span>
+        <button class="sesion-logout" id="btnLogout" title="Cerrar sesión" aria-label="Cerrar sesión">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
       </div>
-      <button class="btn-icon-dark" id="btnLogout" title="Cerrar sesión" aria-label="Cerrar sesión">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-      </button>
     </div>
   </header>
 
@@ -103,7 +107,7 @@
 
   <script src="croma-icons.js?v=20260818-1"></script>
   <script src="croma-session.js?v=20260818-1"></script>
-  <script src="croma-confirm.js?v=20260819-1"></script>
+  <script src="croma-confirm.js?v=20260819-2"></script>
   <script src="feriados-ar.js?v=20260819-1"></script>
   <script src="avisos-mock-data.js?v=20260818-1"></script>
   <script src="avisos-repository.js?v=20260819-1"></script>
@@ -120,8 +124,13 @@
     // "nuevo aviso" que ya trae avisos.js.
     var _sesion = window.CromaSesion ? window.CromaSesion.requerirSesion() : null;
     if (_sesion) {
-      document.getElementById('userNombre').textContent = _sesion.nombre || _sesion.usuario || '';
-      document.getElementById('userRol').textContent = _sesion.rol || '';
+      // Mismo criterio que croma-panel-main (iniciarSesion() en su
+      // index.html): admin muestra "Admin" fijo (no el username interno),
+      // el resto muestra su nombre — nunca nombre + rol repetidos.
+      var _displayNombre = (_sesion.rol === 'admin' || !_sesion.usuario)
+        ? 'Admin'
+        : (_sesion.nombre || _sesion.usuario);
+      document.getElementById('userNombre').innerHTML = (typeof icon === 'function' ? icon('user', '') : '') + ' ' + _displayNombre;
 
       var _navBtnAdmin = document.getElementById('navBtnAdmin');
       var _puedeGestionar = _sesion.rol === 'admin' || _sesion.rol === 'jefe';

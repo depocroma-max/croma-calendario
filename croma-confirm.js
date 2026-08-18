@@ -1,12 +1,15 @@
 // =====================================================
-//  CROMA CONFIRM — diálogo de confirmación reutilizable
+//  CROMA CONFIRM — diálogo de confirmación + toast, reutilizables
 //
-//  Puerto mínimo de mostrarConfirm()/cerrarConfirm() (croma-horarios-main/
-//  app.js) — mismo contrato exacto: mostrarConfirm({titulo, mensaje,
-//  textoOk, textoCancel, peligro, onOk}). Se separó a su propio archivo
-//  (a diferencia de croma-session.js, que sí quedó embebido conceptualmente
-//  en cada app) porque cualquier pantalla de Calendario que necesite
-//  reemplazar confirm() nativo lo puede reusar tal cual.
+//  Puerto mínimo de mostrarConfirm()/cerrarConfirm()/showToast()
+//  (croma-horarios-main/app.js) — mismo contrato exacto en los tres
+//  casos. avisos.js asume que estas tres funciones existen como
+//  globales (igual que en horarios, de donde viene ese archivo) — acá
+//  nunca se cargaba app.js, así que faltaban por completo. Se separó a
+//  su propio archivo (a diferencia de croma-session.js, que sí quedó
+//  embebido conceptualmente en cada app) porque cualquier pantalla de
+//  Calendario que necesite estos reemplazos de confirm()/alert() nativos
+//  los puede reusar tal cual.
 // =====================================================
 
 (function () {
@@ -59,6 +62,15 @@
     if (typeof cb === 'function') cb();
   }
 
+  function showToast(msg, duration) {
+    const t = document.getElementById('toast');
+    if (!t) return; // defensivo — nunca debería faltar, index.html ya lo trae
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function () { t.classList.remove('show'); }, duration || 2500);
+  }
+
   window.mostrarConfirm = mostrarConfirm;
   window.cerrarConfirm = cerrarConfirm;
+  window.showToast = showToast;
 })();

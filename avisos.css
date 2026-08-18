@@ -271,7 +271,7 @@
    (spec de CSS Grid) — los 7 <div class="avz-cal-celda"> siguen cayendo
    en sus columnas de siempre aunque este div aparezca primero en el DOM. */
 .avz-cal-semana-barras {
-  position: absolute; left: 0; right: 0;
+  position: absolute; left: 0; right: 0; z-index: 5;
   display: grid; grid-template-columns: repeat(7, 1fr);
   row-gap: 2px; padding: 0 1px; pointer-events: none;
 }

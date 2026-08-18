@@ -28,3 +28,14 @@
 }
 .croma-confirm-acciones { display: flex; gap: var(--space-2, 8px); }
 .croma-confirm-acciones .btn { flex: 1; }
+
+/* Toast — ver showToast() en croma-confirm.js */
+.toast {
+  position: fixed; bottom: 2rem; right: 2rem;
+  background: var(--croma-black, var(--black)); color: var(--white, #fff);
+  padding: 12px 20px; border-radius: var(--radius-md, 10px);
+  font-size: 13px; box-shadow: var(--shadow-lg, var(--shadow-md));
+  opacity: 0; transform: translateY(8px);
+  transition: transform .25s, opacity .25s; pointer-events: none; z-index: 3000;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
