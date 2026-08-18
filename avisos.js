@@ -835,6 +835,8 @@
       '</div>' +
       '<div class="avz-cal-legenda">' +
         '<span>● Evento</span><span>▓ Local cerrado</span><span>ⓘ Información</span><span>🔴 Urgente</span>' +
+        '<span class="avz-cal-legenda-feriado avz-cal-legenda-nacional">Feriado nacional</span>' +
+        '<span class="avz-cal-legenda-feriado avz-cal-legenda-turistico">No laborable (puente)</span>' +
       '</div>';
   }
 
@@ -864,6 +866,7 @@
       for (let i = s; i < s + 7; i++) {
         const c = celdas[i];
         const esHoy = !c.fuera && c.iso === hoy;
+        const feriado = window.CromaFeriados ? window.CromaFeriados.obtener(c.iso) : null;
         const avisosDia = avisosDelDia(c.iso);
         const vacacionesDia = vacacionesDelDia(c.iso);
 
@@ -902,9 +905,15 @@
           ? '<button class="avz-cal-mas" type="button" data-resumen-dia="' + c.iso + '">+' + restantes + ' más</button>'
           : '';
 
-        html += '<div class="avz-cal-celda' + (c.fuera ? ' fuera-de-mes' : '') + (esHoy ? ' es-hoy' : '') + '" data-celda-fecha="' + c.iso + '">' +
+        const feriadoHtml = feriado
+          ? '<div class="avz-cal-feriado avz-cal-feriado-' + feriado.tipo + '" title="' + escapeAttr(feriado.nombre) + '">' + escapeHtml(feriado.corto) + '</div>'
+          : '';
+
+        html += '<div class="avz-cal-celda' + (c.fuera ? ' fuera-de-mes' : '') + (esHoy ? ' es-hoy' : '') + (feriado ? ' es-feriado avz-cal-celda-' + feriado.tipo : '') + '" data-celda-fecha="' + c.iso + '">' +
           '<div class="avz-cal-num">' + c.num + '</div>' +
+          feriadoHtml +
           '<div class="avz-cal-avisos">' + itemsHtml + masHtml + '</div>' +
+          '<button class="avz-cal-celda-nuevo" type="button" data-nuevo-dia="' + c.iso + '" title="Nuevo aviso este día" aria-label="Nuevo aviso este día">' + icon('plus', 'icon-12') + '</button>' +
         '</div>';
       }
       html += '</div>';
@@ -930,15 +939,26 @@
     semanas.addEventListener('click', function (e) {
       // Clase separada de ".avz-cal-aviso-item" a propósito, para que no
       // ambigüe con ese primer chequeo de abajo ni caiga al handler de
-      // ".avz-cal-celda" (que abriría por error el form de "nuevo aviso").
+      // ".avz-cal-celda" (que abriría por error el resumen del día en vez
+      // del detalle puntual que se clickeó).
       const vacItem = e.target.closest('.avz-cal-vacacion-item');
       if (vacItem) { abrirPanel('detalle-vacacion', { vacacionId: vacItem.dataset.vacacionId, elementoOrigen: vacItem }); return; }
       const item = e.target.closest('.avz-cal-aviso-item');
       if (item) { abrirPanel('detalle', { avisoId: item.dataset.abrirAviso, elementoOrigen: item }); return; }
       const masBtn = e.target.closest('.avz-cal-mas');
       if (masBtn) { abrirPanel('resumen-dia', { fecha: masBtn.dataset.resumenDia, elementoOrigen: masBtn }); return; }
+      // Botón "+" propio de la celda: atajo directo a "nuevo aviso" para
+      // ese día, sin pasar por el resumen — chequeado ANTES del click
+      // genérico de celda para que no se lo coma ese handler.
+      const nuevoBtn = e.target.closest('.avz-cal-celda-nuevo');
+      if (nuevoBtn) { abrirPanel('form', { fecha: nuevoBtn.dataset.nuevoDia, elementoOrigen: nuevoBtn }); return; }
+      // Click en cualquier otra parte de la celda (el día en sí, sin
+      // aviso/vacación puntual debajo del cursor) → resumen del día, no
+      // "nuevo aviso" directo — con varias cosas cargadas en un mismo día,
+      // conviene ver primero qué hay antes de asumir que se quiere crear
+      // uno nuevo (eso ya lo cubre el botón "+").
       const celda = e.target.closest('.avz-cal-celda');
-      if (celda) { abrirPanel('form', { fecha: celda.dataset.celdaFecha, elementoOrigen: celda }); }
+      if (celda) { abrirPanel('resumen-dia', { fecha: celda.dataset.celdaFecha, elementoOrigen: celda }); }
     });
   }
 
