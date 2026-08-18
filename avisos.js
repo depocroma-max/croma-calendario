@@ -30,16 +30,21 @@
   // Información: solo Calendario por default — es la opción para dejar
   // algo marcado sin avisarle a nadie (sin banner/email/whatsapp). Quien
   // publica puede prender esos canales a mano desde "Más opciones" si
-  // igual quiere notificar.
+  // igual quiere notificar. Destinatario por default: Personal (solo yo)
+  // — mismo criterio, "Información" nace pensada como nota propia, no
+  // como comunicado; cambiar a Todos/Sucursal(es)/etc. es una decisión
+  // explícita de quien publica, no el punto de partida.
   // Evento: igual que Información, Novedades queda OFF por default (el
   // calendario ya lo comunica visualmente; el banner es un refuerzo
   // opcional, no obligatorio) — a diferencia de Local cerrado, que sí
-  // necesita avisar activamente.
+  // necesita avisar activamente. Evento sí arranca en "Todos" (a
+  // diferencia de Información) porque por naturaleza es algo que involucra
+  // a otros, no una nota personal.
   const DEFAULTS_POR_TIPO = {
     informacion: {
       canales: { calendario: true, banner: false, email: false, whatsapp: false },
       prioridad: 'normal',
-      destinatarios: { modo: 'todos' },
+      destinatarios: { modo: 'personal' },
     },
     evento: {
       canales: { calendario: true, banner: false, email: false, whatsapp: false },

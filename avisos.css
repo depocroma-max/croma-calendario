@@ -514,7 +514,11 @@
 /* Formulario */
 .avz-field { margin-bottom: var(--space-4, 16px); }
 .avz-field-row { display: flex; gap: 10px; margin-bottom: var(--space-4, 16px); }
-.avz-field-row .avz-field { flex: 1; margin-bottom: 0; }
+/* min-width:0 — sin esto, un <input type="date"> nativo no se achica más
+   allá de su ancho intrínseco (mm/dd/yyyy + ícono) y en un panel angosto
+   los dos campos se pisan/desbordan en vez de repartirse el espacio. */
+.avz-field-row .avz-field { flex: 1; min-width: 0; margin-bottom: 0; }
+.avz-field-row .form-control { width: 100%; min-width: 0; }
 .avz-field-label { display: block; font-size: 12px; font-weight: 600; color: var(--gray-600); margin-bottom: 6px; }
 .avz-field-label-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .avz-field-error { font-size: 12px; color: var(--danger); margin-top: 4px; }
