@@ -300,7 +300,11 @@
 .avz-cal-celda:nth-child(7n+1) { border-left: none; }
 .avz-cal-celda.fuera-de-mes { background: var(--surface-sunken, #fafaf8); }
 .avz-cal-celda.fuera-de-mes .avz-cal-num { color: var(--text-muted, var(--gray-300)); }
-.avz-cal-celda.es-hoy { background: var(--gray-50); }
+/* Anillo en vez de background — así "hoy" se nota SIEMPRE, incluso si
+   ese día es también domingo o feriado (ninguno de los dos toca
+   box-shadow, solo background). background:var(--gray-50) de antes no
+   se notaba porque --gray-50 es igual a --bg. */
+.avz-cal-celda.es-hoy { box-shadow: inset 0 0 0 2px var(--croma-red); }
 .avz-cal-num {
   font-size: 12px;
   color: var(--gray-600);
