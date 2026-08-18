@@ -1,0 +1,30 @@
+/* CROMA CONFIRM — ver croma-confirm.js. Usa exclusivamente tokens de
+   croma-ds.css, ningún color/radio/sombra nuevo. */
+
+.croma-confirm-overlay {
+  position: fixed; inset: 0; background: rgba(13, 13, 13, .45);
+  z-index: 3000; display: flex; align-items: center; justify-content: center;
+  padding: var(--space-4, 16px);
+}
+.croma-confirm-panel {
+  width: min(380px, 100%);
+  background: var(--white, #fff);
+  border-radius: var(--radius-lg, 14px);
+  box-shadow: var(--shadow-lg, var(--shadow-md));
+  padding: var(--space-6, 24px);
+  animation: cromaConfirmIn .15s ease-out;
+}
+@keyframes cromaConfirmIn {
+  from { transform: scale(.97); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.croma-confirm-titulo {
+  font-family: var(--font-display); font-size: 20px; letter-spacing: .4px;
+  color: var(--croma-black, var(--black)); margin-bottom: var(--space-2, 8px);
+}
+.croma-confirm-mensaje {
+  font-size: 13px; color: var(--gray-600); line-height: 1.5;
+  margin-bottom: var(--space-5, 20px);
+}
+.croma-confirm-acciones { display: flex; gap: var(--space-2, 8px); }
+.croma-confirm-acciones .btn { flex: 1; }
