@@ -102,6 +102,11 @@
     // aviso que cree/edite tiene que ser modo 'personal'), esto es solo
     // para no ofrecer en la UI opciones que van a terminar en 403.
     soloPersonal: false,
+    // Usuario de la sesión (ver activar(opts.usuario)) — hace falta para
+    // saber si "esta cuenta puede gestionar ESTE aviso puntual" (ver
+    // puedeGestionarAviso): un aviso ajeno nunca, ni siquiera el propio
+    // si por algún motivo dejó de ser modo 'personal'.
+    usuarioActual: '',
     // "Solicitudes" (vacaciones pendientes) es exclusivamente para
     // admin — sucursales/depo/oficina no gestionan eso. Default true:
     // si activar() no manda opts.rol explícito (mock/test), no se
@@ -487,6 +492,17 @@
     if (aviso.fechaDesde > hoy) return 'programado';
     if (aviso.fechaHasta >= hoy) return 'activo';
     return 'vencido';
+  }
+
+  // Espejo del lado servidor (routes/avisos.js: esGestion + ownership de
+  // encargado) — nunca reemplaza esa validación, solo evita ofrecer en
+  // la UI acciones (Editar/Duplicar/Archivar) que el backend va a
+  // rechazar con 403 igual. Cuenta de gestión: siempre puede. Cuenta
+  // soloPersonal: solo sobre SU PROPIO aviso, y solo si sigue siendo
+  // modo 'personal' — un aviso de otro (incluido "Todos"/admin) nunca.
+  function puedeGestionarAviso(aviso) {
+    if (!state.soloPersonal) return true;
+    return aviso.destinatarios.modo === 'personal' && aviso.autor === state.usuarioActual;
   }
 
   // Regla de visibilidad por tab de sucursal (modelo funcional aprobado):
@@ -914,13 +930,15 @@
           '<div class="avz-fila-dest">' + escapeHtml(labelDestinatarios(a.destinatarios)) + '</div>' +
         '</div>' +
         '<span class="avz-fila-fecha">' + fmtRango(a.fechaDesde, a.fechaHasta) + '</span>' +
-        '<div class="avz-fila-acciones">' +
-          botonFilaAccion('editar', a.id, 'Editar', icon('edit', 'icon-14')) +
-          botonFilaAccion('duplicar', a.id, 'Duplicar', '⧉') +
-          (archivado
-            ? botonFilaAccion('restaurar', a.id, 'Restaurar', icon('refresh', 'icon-14'))
-            : botonFilaAccion('archivar', a.id, 'Archivar', icon('trash', 'icon-14'))) +
-        '</div>' +
+        (puedeGestionarAviso(a) ?
+          '<div class="avz-fila-acciones">' +
+            botonFilaAccion('editar', a.id, 'Editar', icon('edit', 'icon-14')) +
+            botonFilaAccion('duplicar', a.id, 'Duplicar', '⧉') +
+            (archivado
+              ? botonFilaAccion('restaurar', a.id, 'Restaurar', icon('refresh', 'icon-14'))
+              : botonFilaAccion('archivar', a.id, 'Archivar', icon('trash', 'icon-14'))) +
+          '</div>'
+        : '') +
       '</div>';
     });
     return html;
@@ -1392,13 +1410,18 @@
         '<div class="avz-detalle-fila"><span>Creado</span><strong>' + fmtCorta(a.fechaCreacion) + '</strong></div>' +
         (state.panel.errorGuardado ? '<div class="avz-field-error" style="margin-top:8px">' + escapeHtml(state.panel.errorGuardado.mensaje) + '</div>' : '') +
       '</div>' +
-      '<div class="avz-panel-footer">' +
-        '<button class="btn btn-outline" id="avzDetEditar" type="button"' + (g ? ' disabled' : '') + '>Editar</button>' +
-        '<button class="btn btn-outline" id="avzDetDuplicar" type="button"' + (g ? ' disabled' : '') + '>' + (g ? 'Duplicando…' : 'Duplicar') + '</button>' +
-        (a.archivado
-          ? '<button class="btn btn-primary" id="avzDetRestaurar" type="button"' + (g ? ' disabled' : '') + '>' + (g ? 'Restaurando…' : 'Restaurar') + '</button>'
-          : '<button class="btn btn-danger" id="avzDetArchivar" type="button"' + (g ? ' disabled' : '') + '>' + (g ? 'Archivando…' : 'Archivar') + '</button>') +
-      '</div>';
+      // Editar/Duplicar/Archivar: solo si esta cuenta puede gestionar
+      // ESTE aviso puntual (ver puedeGestionarAviso) — nunca se ofrecen
+      // sobre un aviso ajeno que de todos modos el backend rechazaría.
+      (puedeGestionarAviso(a) ?
+        '<div class="avz-panel-footer">' +
+          '<button class="btn btn-outline" id="avzDetEditar" type="button"' + (g ? ' disabled' : '') + '>Editar</button>' +
+          '<button class="btn btn-outline" id="avzDetDuplicar" type="button"' + (g ? ' disabled' : '') + '>' + (g ? 'Duplicando…' : 'Duplicar') + '</button>' +
+          (a.archivado
+            ? '<button class="btn btn-primary" id="avzDetRestaurar" type="button"' + (g ? ' disabled' : '') + '>' + (g ? 'Restaurando…' : 'Restaurar') + '</button>'
+            : '<button class="btn btn-danger" id="avzDetArchivar" type="button"' + (g ? ' disabled' : '') + '>' + (g ? 'Archivando…' : 'Archivar') + '</button>') +
+        '</div>'
+      : '');
   }
 
   function labelEstado(st) {
@@ -2090,6 +2113,7 @@
     }
     if (opts.soloPersonal) state.soloPersonal = true;
     if (opts.rol) state.mostrarSolicitudes = opts.rol === 'admin';
+    if (opts.usuario) state.usuarioActual = opts.usuario;
     document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
     document.querySelectorAll('.nav-btn, .drawer-nav-btn').forEach(function (b) { b.classList.remove('active'); });
     const view = document.getElementById('viewAvisos');

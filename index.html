@@ -111,7 +111,7 @@
   <script src="feriados-ar.js?v=20260819-1"></script>
   <script src="avisos-mock-data.js?v=20260818-1"></script>
   <script src="avisos-repository.js?v=20260819-3"></script>
-  <script src="avisos.js?v=20260819-10"></script>
+  <script src="avisos.js?v=20260819-11"></script>
   <script src="avisos-provider.js?v=20260818-1"></script>
   <script src="avisos-provider-avisos-strategy.js?v=20260818-1"></script>
 
@@ -166,7 +166,7 @@
       // rol: se manda siempre (no solo para encargado) — "Solicitudes"
       // (vacaciones pendientes) es exclusivamente para admin, incluidas
       // cuentas de sucursal/depo/oficina que no gestionan eso.
-      var _activarOpts = { rol: _sesion.rol };
+      var _activarOpts = { rol: _sesion.rol, usuario: _sesion.usuario };
       if (_sesion.rol === 'encargado') {
         var _sucId = _resolverSucId(_sesion.sucursal);
         if (_sucId) _activarOpts.sucursalFija = _sucId;
