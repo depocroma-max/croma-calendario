@@ -234,15 +234,23 @@
   }
 
   // ── Alerta de "hoy" — sonido + toast al entrar, una sola vez por
-  //    sesión. No depende de la tab de sucursal (avisosFiltrados() sí,
-  //    por eso se usa state.avisos crudo — un aviso de otra sucursal no
-  //    debería alertar a alguien que no lo va a ver en su tab, así que
-  //    en rigor SÍ conviene filtrar por sucursal — se resuelve abajo con
-  //    avisosDelDia(), que ya aplica ese filtro). ─────────────────────
+  //    sesión. Mismo criterio que ya usa la vista "Hoy" (renderHoy):
+  //    vigente (estadoDe==='activo') o todavía no llegó pero está cerca
+  //    (estadoDe==='programado', dentro de los próximos 7 días) — nunca
+  //    'vencido' ni 'archivado' (estadoDe ya los excluye de estos dos
+  //    casos). Pedido explícito: algo que ya pasó no tiene que alertar.
+  //    avisosFiltrados() ya respeta la tab de sucursal — un aviso de
+  //    otra sucursal no alerta a alguien que no lo va a ver ahí.
   function alertarAvisosDeHoySiCorresponde() {
     if (state.alertaHoyMostrada) return;
     state.alertaHoyMostrada = true;
-    const deHoy = avisosDelDia(hoyISO());
+    const hoy = hoyISO();
+    const deHoy = avisosFiltrados().filter(function (a) {
+      const st = estadoDe(a);
+      if (st === 'activo') return true;
+      if (st === 'programado') return diffDias(hoy, a.fechaDesde) <= 7;
+      return false;
+    });
     if (!deHoy.length) return;
     _reproducirSonidoAlerta();
     const titulos = deHoy.slice(0, 3).map(function (a) { return a.titulo; }).join(', ');
