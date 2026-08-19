@@ -107,6 +107,9 @@
     // si activar() no manda opts.rol explícito (mock/test), no se
     // oculta nada.
     mostrarSolicitudes: true,
+    // Alerta sonora de "hoy" — se dispara una sola vez por sesión, en la
+    // primera carga exitosa (no en cada reload/archivado posterior).
+    alertaHoyMostrada: false,
     vista: 'calendario',
     busqueda: '',
     calAnio: null,
@@ -221,12 +224,59 @@
       if (resultado.ok) {
         state.avisos = resultado.avisos;
         state.carga.estado = 'listo';
+        alertarAvisosDeHoySiCorresponde();
       } else {
         state.carga.estado = 'error';
         state.carga.error = { status: resultado.status, mensaje: resultado.error };
       }
       render();
     });
+  }
+
+  // ── Alerta de "hoy" — sonido + toast al entrar, una sola vez por
+  //    sesión. No depende de la tab de sucursal (avisosFiltrados() sí,
+  //    por eso se usa state.avisos crudo — un aviso de otra sucursal no
+  //    debería alertar a alguien que no lo va a ver en su tab, así que
+  //    en rigor SÍ conviene filtrar por sucursal — se resuelve abajo con
+  //    avisosDelDia(), que ya aplica ese filtro). ─────────────────────
+  function alertarAvisosDeHoySiCorresponde() {
+    if (state.alertaHoyMostrada) return;
+    state.alertaHoyMostrada = true;
+    const deHoy = avisosDelDia(hoyISO());
+    if (!deHoy.length) return;
+    _reproducirSonidoAlerta();
+    const titulos = deHoy.slice(0, 3).map(function (a) { return a.titulo; }).join(', ');
+    const resto = deHoy.length > 3 ? ' y ' + (deHoy.length - 3) + ' más' : '';
+    const mensaje = deHoy.length === 1
+      ? 'Hoy: ' + deHoy[0].titulo
+      : 'Hoy tenés ' + deHoy.length + ' avisos: ' + titulos + resto;
+    if (typeof showToast === 'function') showToast(mensaje, 5000);
+  }
+
+  // Dos tonos cortos con Web Audio API — nada de archivo de audio para
+  // no agregar un asset binario al repo. Falla en silencio si el
+  // navegador bloquea audio sin interacción previa del usuario (política
+  // de autoplay) — no es crítico, el toast visual ya avisa igual.
+  function _reproducirSonidoAlerta() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      [880, 1175].forEach(function (freq, i) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        const inicio = ctx.currentTime + i * 0.16;
+        gain.gain.setValueAtTime(0.0001, inicio);
+        gain.gain.exponentialRampToValueAtTime(0.2, inicio + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, inicio + 0.15);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(inicio);
+        osc.stop(inicio + 0.16);
+      });
+      setTimeout(function () { ctx.close(); }, 500);
+    } catch (e) { /* silencio — el toast visual ya avisa igual */ }
   }
 
   // ── Vacaciones — carga de la capa visual (Fase 3, calendario nuevo) ────
