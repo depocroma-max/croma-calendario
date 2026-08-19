@@ -1771,6 +1771,10 @@
           (err.mensaje ? '<div class="avz-field-error">' + err.mensaje + '</div>' : '') +
         '</div>' +
         '<div class="avz-field">' +
+          '<span class="avz-field-label">Color</span>' +
+          '<div class="avz-color-swatches" role="radiogroup" aria-label="Color del aviso">' + colorSwatches(b) + '</div>' +
+        '</div>' +
+        '<div class="avz-field">' +
           '<span class="avz-field-label">A quién le llega</span>' +
           (state.soloPersonal
             ? '<div class="avz-vacio-sub">Solo vos vas a ver este aviso — tu cuenta no puede publicar para otros.</div>'
@@ -1797,17 +1801,19 @@
               '<label class="avz-radio-row"><input type="radio" name="avzPrioridad" value="normal"' + (b.prioridad === 'normal' ? ' checked' : '') + ' /> Normal</label>' +
               '<label class="avz-radio-row"><input type="radio" name="avzPrioridad" value="urgente"' + (b.prioridad === 'urgente' ? ' checked' : '') + ' /> Urgente</label>' +
             '</div>' +
-            '<div class="avz-field">' +
-              '<span class="avz-field-label">Canales</span>' +
-              canalCheckbox('calendario', 'Calendario', b) +
-              canalCheckbox('banner', 'Novedades', b) +
-              canalCheckbox('email', 'Email a sucursal', b) +
-              canalCheckbox('whatsapp', 'WhatsApp', b) +
-            '</div>' +
-            '<div class="avz-field">' +
-              '<span class="avz-field-label">Color</span>' +
-              '<div class="avz-color-swatches" role="radiogroup" aria-label="Color del aviso">' + colorSwatches(b) + '</div>' +
-            '</div>' +
+            // Canales no tiene sentido para una cuenta soloPersonal: ya
+            // publica siempre en calendario nomás (DEFAULTS_POR_TIPO deja
+            // canales.calendario:true) y no puede elegir banner/email/
+            // whatsapp de todos modos (esos canales son para avisos que
+            // le llegan a otros, y soloPersonal nunca le llega a nadie más).
+            (state.soloPersonal ? '' :
+              '<div class="avz-field">' +
+                '<span class="avz-field-label">Canales</span>' +
+                canalCheckbox('calendario', 'Calendario', b) +
+                canalCheckbox('banner', 'Novedades', b) +
+                canalCheckbox('email', 'Email a sucursal', b) +
+                canalCheckbox('whatsapp', 'WhatsApp', b) +
+              '</div>') +
           '</div>'
         ) : '') +
         '<div class="avz-preview-box"><strong>Vista previa:</strong> <span id="avzPreviewTexto">' + escapeHtml(textoVistaPrevia(b)) + '</span></div>' +
