@@ -106,12 +106,12 @@
   <div class="toast" id="toast"></div>
 
   <script src="croma-icons.js?v=20260818-1"></script>
-  <script src="croma-session.js?v=20260818-1"></script>
+  <script src="croma-session.js?v=20260819-1"></script>
   <script src="croma-confirm.js?v=20260819-2"></script>
   <script src="feriados-ar.js?v=20260819-1"></script>
   <script src="avisos-mock-data.js?v=20260818-1"></script>
   <script src="avisos-repository.js?v=20260819-2"></script>
-  <script src="avisos.js?v=20260819-7"></script>
+  <script src="avisos.js?v=20260819-8"></script>
   <script src="avisos-provider.js?v=20260818-1"></script>
   <script src="avisos-provider-avisos-strategy.js?v=20260818-1"></script>
 
@@ -163,7 +163,10 @@
       // Cuenta de sucursal (encargado): ve solo su propia sucursal, sin
       // selector, y solo puede crear/editar avisos personales — el
       // backend ya lo exige así, esto es nada más para la UI.
-      var _activarOpts = {};
+      // rol: se manda siempre (no solo para encargado) — "Solicitudes"
+      // (vacaciones pendientes) es exclusivamente para admin, incluidas
+      // cuentas de sucursal/depo/oficina que no gestionan eso.
+      var _activarOpts = { rol: _sesion.rol };
       if (_sesion.rol === 'encargado') {
         var _sucId = _resolverSucId(_sesion.sucursal);
         if (_sucId) _activarOpts.sucursalFija = _sucId;

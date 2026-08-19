@@ -23,13 +23,26 @@
 
   // Token vía #token=... o ?token=... (no queda en logs del servidor,
   // mismo patrón que usa horarios/panel al llegar desde el hub).
+  //
+  // Al limpiar la URL se saca SOLO la clave 'token' del hash, nunca el
+  // hash completo — bug real encontrado en croma-horarios-main
+  // (2026-08-19): pisar todo el hash con location.pathname + search le
+  // borraba a app.js su propio parámetro (hsession) antes de que
+  // llegara a leerlo, porque este script se carga primero a propósito.
+  // Acá Calendario no tiene un parámetro propio en el hash hoy, pero se
+  // deja igual de cuidadoso — es el mismo archivo, portado tal cual.
   function _leerTokenDeUrl() {
     var hashParams = new URLSearchParams(location.hash.slice(1));
     var searchParams = new URLSearchParams(location.search);
     var token = hashParams.get('token') || searchParams.get('token');
     if (token) {
       sessionStorage.setItem('croma_token', token);
-      history.replaceState(null, '', location.pathname + location.search);
+      if (hashParams.has('token')) {
+        hashParams.delete('token');
+        var nuevoHash = hashParams.toString();
+        var nuevaUrl = location.pathname + location.search + (nuevoHash ? '#' + nuevoHash : '');
+        history.replaceState(null, '', nuevaUrl);
+      }
     }
   }
   _leerTokenDeUrl();

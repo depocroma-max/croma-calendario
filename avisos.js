@@ -102,6 +102,11 @@
     // aviso que cree/edite tiene que ser modo 'personal'), esto es solo
     // para no ofrecer en la UI opciones que van a terminar en 403.
     soloPersonal: false,
+    // "Solicitudes" (vacaciones pendientes) es exclusivamente para
+    // admin — sucursales/depo/oficina no gestionan eso. Default true:
+    // si activar() no manda opts.rol explícito (mock/test), no se
+    // oculta nada.
+    mostrarSolicitudes: true,
     vista: 'calendario',
     busqueda: '',
     calAnio: null,
@@ -618,7 +623,12 @@
               // Solicitudes pendientes (mudado desde el viejo menú Calendario
               // → tab "Solicitudes pendientes") — reusa cargarSolicitudesAdmin()
               // de app.js tal cual, solo cambia dónde vive el contenedor.
-              '<button class="avz-view-btn' + (state.vista === 'solicitudes' ? ' active' : '') + '" id="avzTabSolicitudes" data-vista="solicitudes" aria-selected="' + (state.vista === 'solicitudes') + '">Solicitudes</button>' +
+              // Exclusivamente admin (ver activar()) — sucursales/depo/
+              // oficina no gestionan vacaciones, ni tiene sentido que vean
+              // un tab que además siempre les daría 403 si lo tocaran.
+              (state.mostrarSolicitudes
+                ? '<button class="avz-view-btn' + (state.vista === 'solicitudes' ? ' active' : '') + '" id="avzTabSolicitudes" data-vista="solicitudes" aria-selected="' + (state.vista === 'solicitudes') + '">Solicitudes</button>'
+                : '') +
             '</div>' +
             '<div class="avz-search">' + icon('search', 'icon-16') +
               '<label class="avz-visually-hidden" for="avzBuscar">Buscar avisos</label>' +
@@ -2013,6 +2023,7 @@
   // opts.soloPersonal: mismo tipo de cuenta — el backend ya exige que
   // todo lo que cree/edite sea modo 'personal' (routes/avisos.js), esto
   // solo ajusta la UI para no ofrecer opciones que van a terminar en 403.
+  // opts.rol: si viene y no es 'admin', oculta el tab "Solicitudes".
   function activar(opts) {
     opts = opts || {};
     if (opts.sucursalFija && SUCURSALES.some(function (s) { return s.id === opts.sucursalFija; })) {
@@ -2020,6 +2031,7 @@
       state.sucursalBloqueada = true;
     }
     if (opts.soloPersonal) state.soloPersonal = true;
+    if (opts.rol) state.mostrarSolicitudes = opts.rol === 'admin';
     document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
     document.querySelectorAll('.nav-btn, .drawer-nav-btn').forEach(function (b) { b.classList.remove('active'); });
     const view = document.getElementById('viewAvisos');
