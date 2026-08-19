@@ -92,6 +92,16 @@
 
   const state = {
     sucursal: 'todas',
+    // true cuando la cuenta pertenece a una sucursal puntual (locales) —
+    // ver activar(opts.sucursalFija). En ese caso el tab de sucursal ni
+    // se muestra: no tiene sentido dejar elegir otra sucursal cuando la
+    // cuenta ya está atada a una sola.
+    sucursalBloqueada: false,
+    // Cuenta de sucursal (encargado) — el backend ya lo exige así del
+    // lado seguro (routes/avisos.js: si no es admin/jefe/horarios, todo
+    // aviso que cree/edite tiene que ser modo 'personal'), esto es solo
+    // para no ofrecer en la UI opciones que van a terminar en 403.
+    soloPersonal: false,
     vista: 'calendario',
     busqueda: '',
     calAnio: null,
@@ -594,6 +604,9 @@
       return '<button class="avz-suc-tab' + activo + '" data-suc="' + s.id + '" aria-selected="' + (s.id === state.sucursal) + '"' + dotStyle + '>' +
         (s.var ? '<span class="avz-suc-dot"></span>' : '') + s.label + '</button>';
     }).join('');
+    // Cuenta atada a una sucursal puntual (locales) — no tiene sentido
+    // dejar elegir otra, así que el tab ni se muestra (ver activar()).
+    const sucTabsHtml = state.sucursalBloqueada ? '' : '<div class="avz-suc-tabs" id="avzSucTabs" role="tablist" aria-label="Sucursal">' + sucOpts + '</div>';
 
     cont.innerHTML =
       '<div class="avz-shell">' +
@@ -616,11 +629,12 @@
             '</button>' +
           '</div>' +
         '</div>' +
-        '<div class="avz-suc-tabs" id="avzSucTabs" role="tablist" aria-label="Sucursal">' + sucOpts + '</div>' +
+        sucTabsHtml +
         '<div class="avz-body" id="avzBody"></div>' +
       '</div>';
 
-    document.getElementById('avzSucTabs').addEventListener('click', function (e) {
+    const sucTabsEl = document.getElementById('avzSucTabs');
+    if (sucTabsEl) sucTabsEl.addEventListener('click', function (e) {
       const btn = e.target.closest('.avz-suc-tab');
       if (!btn) return;
       state.sucursal = btn.dataset.suc;
@@ -1121,7 +1135,10 @@
       mensaje: '',
       fechaDesde: opts.fecha || '',
       fechaHasta: opts.fecha || '',
-      destinatarios: clonarDestinatarios(def.destinatarios),
+      // soloPersonal fuerza 'personal' pase lo que pase el default del
+      // tipo — el backend lo exige así igual, esto evita ofrecer algo
+      // que después el servidor va a rechazar.
+      destinatarios: state.soloPersonal ? { modo: 'personal' } : clonarDestinatarios(def.destinatarios),
       canales: Object.assign({}, def.canales),
       prioridad: def.prioridad,
       color: '',
@@ -1698,7 +1715,13 @@
     const errorGeneral = state.panel.errorGuardado && !Object.keys(erroresServidor).length ? state.panel.errorGuardado.mensaje : null;
     const esEdicion = !!state.panel.avisoId;
 
-    const tipoChips = Object.keys(TIPO_META).map(function (t) {
+    // Local cerrado exige destinatarios modo 'sucursal' — incompatible
+    // con soloPersonal (siempre 'personal'), así que ni se ofrece: sería
+    // una opción que el backend rechaza sí o sí.
+    const tiposDisponibles = state.soloPersonal
+      ? Object.keys(TIPO_META).filter(function (t) { return t !== 'local_cerrado'; })
+      : Object.keys(TIPO_META);
+    const tipoChips = tiposDisponibles.map(function (t) {
       const activo = b.tipo === t;
       return '<button class="avz-tipo-chip' + (activo ? ' active' : '') + '" type="button" data-tipo="' + t + '" role="radio" aria-checked="' + activo + '">' +
         TIPO_META[t].icono + ' ' + TIPO_META[t].label + '</button>';
@@ -1749,8 +1772,9 @@
         '</div>' +
         '<div class="avz-field">' +
           '<span class="avz-field-label">A quién le llega</span>' +
-          '<div class="avz-radio-group" role="radiogroup" aria-label="Destinatarios">' + destRadios + '</div>' +
-          destDetalle +
+          (state.soloPersonal
+            ? '<div class="avz-vacio-sub">Solo vos vas a ver este aviso — tu cuenta no puede publicar para otros.</div>'
+            : '<div class="avz-radio-group" role="radiogroup" aria-label="Destinatarios">' + destRadios + '</div>' + destDetalle) +
           (err.destinatarios ? '<div class="avz-field-error">' + err.destinatarios + '</div>' : '') +
         '</div>' +
         (mostrarFecha ? (
@@ -1834,7 +1858,7 @@
         b.tipo = nuevoTipo;
         b.canales = Object.assign({}, def.canales);
         b.prioridad = def.prioridad;
-        b.destinatarios = clonarDestinatarios(def.destinatarios);
+        b.destinatarios = state.soloPersonal ? { modo: 'personal' } : clonarDestinatarios(def.destinatarios);
         marcarDirty();
         montarPanel();
       });
@@ -1977,7 +2001,19 @@
   }
 
   // ── Integración con la navegación existente ───────────
-  function activar() {
+  // opts.sucursalFija: cuenta de una sucursal puntual (locales) — fija
+  // esa tab y oculta el selector de sucursal por completo (ver render()).
+  // Se ignora si no matchea ninguna SUCURSALES real (defensivo).
+  // opts.soloPersonal: mismo tipo de cuenta — el backend ya exige que
+  // todo lo que cree/edite sea modo 'personal' (routes/avisos.js), esto
+  // solo ajusta la UI para no ofrecer opciones que van a terminar en 403.
+  function activar(opts) {
+    opts = opts || {};
+    if (opts.sucursalFija && SUCURSALES.some(function (s) { return s.id === opts.sucursalFija; })) {
+      state.sucursal = opts.sucursalFija;
+      state.sucursalBloqueada = true;
+    }
+    if (opts.soloPersonal) state.soloPersonal = true;
     document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
     document.querySelectorAll('.nav-btn, .drawer-nav-btn').forEach(function (b) { b.classList.remove('active'); });
     const view = document.getElementById('viewAvisos');

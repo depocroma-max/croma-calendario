@@ -223,9 +223,24 @@
     return { ok: true, aviso: desdeApi(data.aviso) };
   }
 
+  // GET /api/avisos (gestión: TODOS los avisos, sin filtrar) requiere
+  // admin/jefe/horarios en el backend — cualquier otro rol (encargado de
+  // sucursal, empleado) recibe 403. Para esos casos hay que pedir
+  // /api/avisos/mios en su lugar: mismo shape de respuesta (mismo
+  // desdeApi() sirve para las dos), pero ya filtrado server-side según
+  // lo que le corresponde ver a esa identidad. Nunca al revés (admin
+  // usando /mios): esa ruta esconde cualquier aviso modo 'sucursal' para
+  // una identidad sin sucursalId propia (el caso típico de admin), que
+  // es exactamente lo que sí necesita ver para poder gestionarlo.
+  function _puedeGestionarTodo() {
+    const identidad = window.CromaSesion ? window.CromaSesion.usuarioActual() : null;
+    return !!identidad && ['admin', 'jefe', 'horarios'].indexOf(identidad.rol) !== -1;
+  }
+
   const ApiRepository = {
     listar: async function () {
-      const data = await fetchAvisosApi('', { method: 'GET' });
+      const path = _puedeGestionarTodo() ? '' : '/mios';
+      const data = await fetchAvisosApi(path, { method: 'GET' });
       if (!data.ok) return data;
       return { ok: true, avisos: (data.avisos || []).map(desdeApi) };
     },

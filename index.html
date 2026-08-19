@@ -110,8 +110,8 @@
   <script src="croma-confirm.js?v=20260819-2"></script>
   <script src="feriados-ar.js?v=20260819-1"></script>
   <script src="avisos-mock-data.js?v=20260818-1"></script>
-  <script src="avisos-repository.js?v=20260819-1"></script>
-  <script src="avisos.js?v=20260819-5"></script>
+  <script src="avisos-repository.js?v=20260819-2"></script>
+  <script src="avisos.js?v=20260819-6"></script>
   <script src="avisos-provider.js?v=20260818-1"></script>
   <script src="avisos-provider-avisos-strategy.js?v=20260818-1"></script>
 
@@ -140,9 +140,39 @@
         window.CromaSesion.cerrarSesion();
       });
 
+      // Mismo mapeo que usa el hub (Croma-app-main/index.html, SUC_MAP)
+      // para resolver el "sucursal" del JWT — las cuentas de encargado lo
+      // traen como label completo ("01 PASEO"), nunca el código corto que
+      // usa el resto de Calendario ("01").
+      var _SUC_MAP = {
+        '01': '01', '01 PASEO': '01',
+        '05': '05', '05 WAVE': '05',
+        '09': '09', '09 CIPO SAN MARTIN': '09',
+        '10': '10', '10 PERITO MORENO': '10',
+        '12': '12', '12 CENTENARIO': '12',
+        '14': '14', '14 ROCA': '14',
+        'DEPO': 'DEPO', 'OFICINA': 'OFICINA'
+      };
+      function _resolverSucId(raw) {
+        if (!raw) return null;
+        if (_SUC_MAP[raw]) return _SUC_MAP[raw];
+        var prefix = raw.split(' ')[0];
+        return _SUC_MAP[prefix] || null;
+      }
+
+      // Cuenta de sucursal (encargado): ve solo su propia sucursal, sin
+      // selector, y solo puede crear/editar avisos personales — el
+      // backend ya lo exige así, esto es nada más para la UI.
+      var _activarOpts = {};
+      if (_sesion.rol === 'encargado') {
+        var _sucId = _resolverSucId(_sesion.sucursal);
+        if (_sucId) _activarOpts.sucursalFija = _sucId;
+        _activarOpts.soloPersonal = true;
+      }
+
       var _montarAvisos = function () {
         if (window.CromaAvisos && typeof window.CromaAvisos.activar === 'function') {
-          window.CromaAvisos.activar();
+          window.CromaAvisos.activar(_activarOpts);
         }
         var _splash = document.getElementById('splashScreen');
         if (_splash) _splash.remove();
