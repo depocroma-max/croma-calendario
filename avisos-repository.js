@@ -18,6 +18,7 @@
     if (d.modo === 'sucursal') return { modo: 'sucursal', ids: (d.ids || []).slice() };
     if (d.modo === 'empleado') return { modo: 'empleado', nombres: (d.nombres || []).slice(), sucursalId: d.sucursalId };
     if (d.modo === 'administracion') return { modo: 'administracion' };
+    if (d.modo === 'personal') return { modo: 'personal' };
     return { modo: 'todos' };
   }
   function clonarAviso(a) {
@@ -119,6 +120,7 @@
     if (d.modo === 'sucursal') return { modo: 'sucursal', ids: (d.ids || []).slice() };
     if (d.modo === 'empleado') return { modo: 'empleado', nombres: (d.nombres || []).slice(), sucursalId: d.sucursal_id || '' };
     if (d.modo === 'administracion') return { modo: 'administracion' };
+    if (d.modo === 'personal') return { modo: 'personal' };
     return { modo: 'todos' };
   }
   // fmtCorta()/fmtRango() en avisos.js esperan fecha simple "yyyy-mm-dd"
